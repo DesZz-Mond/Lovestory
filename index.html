@@ -219,7 +219,6 @@
             will-change: transform, box-shadow;
             transform: translate3d(0, 0, 0) scale(1) !important;
             -webkit-transform: translate3d(0, 0, 0) scale(1) !important;
-            /* ИСПРАВЛЕНИЕ: Жестко фиксируем форму круга на время полета, чтобы не превращался в квадрат */
             border-radius: 50% !important; 
             overflow: hidden !important; 
         }
@@ -320,7 +319,8 @@
         .masonry-gallery .photo-container { margin-bottom: 0.75rem; border-radius: var(--radius-media); max-width: 100%; min-height: 150px; aspect-ratio: auto; }
         .masonry-gallery .photo-hover { height: auto; object-fit: initial; }
 
-        .timeline-item { position: relative; width: 100%; display: flex; margin-bottom: 4rem; padding-left: 1.5rem; transition: margin 0.5s ease, padding 0.5s ease; }
+        /* ВАЖНО: Аппаратное ускорение и умный рендеринг только видимого контента */
+        .timeline-item { position: relative; width: 100%; display: flex; margin-bottom: 4rem; padding-left: 1.5rem; transition: margin 0.5s ease, padding 0.5s ease; content-visibility: auto; contain-intrinsic-size: auto 800px; }
         @media (min-width: 768px) { .timeline-item { margin-bottom: 6rem; padding-left: 3rem; } }
         .timeline-line { position: absolute; left: 8px; top: 0; bottom: -4rem; width: 2px; background: var(--timeline-line); transition: background-color var(--anim-duration); z-index: 0; }
         @media (min-width: 768px) { .timeline-line { left: 16px; bottom: -6rem; background: linear-gradient(to bottom, transparent, var(--timeline-line), transparent); } }
@@ -2778,34 +2778,31 @@
         setInterval(updateTimers, 1000);
         updateTimers();
 
+        // Оптимизированный слушатель скролла с requestAnimationFrame и passive: true
+        let isScrolling = false;
         window.addEventListener('scroll', () => {
-            const h = document.documentElement;
-            const st = h.scrollTop || document.body.scrollTop;
-            const sh = h.scrollHeight || document.body.scrollHeight;
-            const pct = (st / (sh - h.clientHeight)) * 100;
-            const scrollProg = document.getElementById('scroll-progress');
-            if (scrollProg) scrollProg.style.width = pct + '%';
-            
-            if(!siteSettings.scrollProgress) return;
-            
-            const firefly = document.getElementById('timeline-firefly');
-            if (firefly) {
-                if (st > window.innerHeight * 0.5) {
-                    firefly.style.opacity = '1';
-                    document.querySelectorAll('.timeline-dot').forEach(dot => {
-                        const rect = dot.getBoundingClientRect();
-                        const cy = rect.top + rect.height / 2;
-                        if (cy > window.innerHeight * 0.45 && cy < window.innerHeight * 0.55) {
-                            dot.classList.add('glow');
-                        } else {
-                            dot.classList.remove('glow');
+            if (!isScrolling) {
+                window.requestAnimationFrame(() => {
+                    const h = document.documentElement;
+                    const st = h.scrollTop || document.body.scrollTop;
+                    const sh = h.scrollHeight || document.body.scrollHeight;
+                    const scrollable = sh - h.clientHeight;
+                    
+                    const pct = scrollable > 0 ? (st / scrollable) * 100 : 0;
+                    const scrollProg = document.getElementById('scroll-progress');
+                    if (scrollProg) scrollProg.style.width = pct + '%';
+                    
+                    if (siteSettings.scrollProgress) {
+                        const firefly = document.getElementById('timeline-firefly');
+                        if (firefly) {
+                            firefly.style.opacity = (st > window.innerHeight * 0.5) ? '1' : '0';
                         }
-                    });
-                } else {
-                    firefly.style.opacity = '0';
-                }
+                    }
+                    isScrolling = false;
+                });
+                isScrolling = true;
             }
-        });
+        }, { passive: true });
 
         window.addEventListener('DOMContentLoaded', () => { 
             loadSettings(); 
