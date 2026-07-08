@@ -219,6 +219,9 @@
             will-change: transform, box-shadow;
             transform: translate3d(0, 0, 0) scale(1) !important;
             -webkit-transform: translate3d(0, 0, 0) scale(1) !important;
+            /* ИСПРАВЛЕНИЕ: Жестко фиксируем форму круга на время полета, чтобы не превращался в квадрат */
+            border-radius: 50% !important; 
+            overflow: hidden !important; 
         }
         .media-player.teleported.is-animating {
             transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.5s ease, border-color var(--anim-duration) ease !important;
@@ -228,8 +231,6 @@
             -webkit-transform: translate3d(var(--tx, 0), var(--ty, 0), 0) scale(var(--scale, 2.5)) !important;
             box-shadow: 0 0 50px 15px rgba(var(--color-ruby-rgb), 0.6), 0 0 150px rgba(0,0,0,0.9) !important;
             border: 3px solid rgb(var(--color-ruby-rgb)) !important;
-            border-radius: 50% !important;
-            overflow: hidden !important;
         }
 
         .media-player > video { width: 100%; height: auto; display: block; background: #0e0b12; pointer-events: none; transition: filter 0.8s ease; }
@@ -2352,22 +2353,17 @@
                     }
                 }
             });
-        }, { rootMargin: "-40% 0px -40% 0px" });
+        }, { rootMargin: "-30% 0px -30% 0px" });
 
         document.querySelectorAll('.timeline-item').forEach(el => colorObserver.observe(el));
 
-        // Оптимизация свечения точек - работает только через Observer, без дублирования в scroll
         const dotObserver = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
                 if(entry.isIntersecting) entry.target.classList.add('glow');
                 else entry.target.classList.remove('glow');
             });
-        }, { rootMargin: "-45% 0px -45% 0px" });
-        
-        // Маленький таймаут чтобы DOM точно успел отрендерить добавленные точки
-        setTimeout(() => {
-            document.querySelectorAll('.timeline-dot').forEach(d => dotObserver.observe(d));
-        }, 100);
+        }, { rootMargin: "-49% 0px -49% 0px" });
+        document.querySelectorAll('.timeline-dot').forEach(d => dotObserver.observe(d));
 
         const revealObserver = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
@@ -2429,6 +2425,8 @@
         };
 
         window.closePlayingCircles = function() {
+            let hasTeleported = false;
+            
             document.querySelectorAll('.media-player.teleported, .media-player.playing').forEach(wrapper => {
                 const video = wrapper.querySelector('video');
                 if(video && !video.paused) {
@@ -2436,10 +2434,9 @@
                 }
                 
                 if (wrapper.classList.contains('teleported')) {
-                    // Плавно возвращаем на исходную позицию (убирая .is-fullscreen, срабатывает transition назад)
+                    hasTeleported = true;
                     wrapper.classList.remove('is-fullscreen', 'playing');
                     
-                    // Ждем завершения CSS анимации полета (0.5s) перед возвратом в DOM
                     setTimeout(() => {
                         const placeholderId = wrapper.dataset.placeholderId;
                         const placeholder = document.getElementById(placeholderId);
@@ -2450,6 +2447,7 @@
                             wrapper.style.left = '';
                             wrapper.style.width = '';
                             wrapper.style.height = '';
+                            wrapper.style.margin = '';
                             wrapper.style.pointerEvents = '';
                             wrapper.style.zIndex = '';
                             wrapper.style.removeProperty('--tx');
@@ -2463,8 +2461,17 @@
                     wrapper.classList.remove('playing');
                 }
             });
-            document.body.classList.remove('circle-playing');
-            updateBodyScrollLock();
+            
+            // Разблокируем скролл только ПОСЛЕ того как кружок вернется на место (500мс)
+            if (hasTeleported) {
+                setTimeout(() => {
+                    document.body.classList.remove('circle-playing');
+                    updateBodyScrollLock();
+                }, 500);
+            } else {
+                document.body.classList.remove('circle-playing');
+                updateBodyScrollLock();
+            }
         };
 
         function initVideoPlayers() {
@@ -2505,7 +2512,7 @@
                             } 
                         }
                     });
-                }, { rootMargin: "300px" }); // Начинает грузить видео до того как оно появилось на экране
+                }, { threshold: 0.2 });
                 vObs.observe(wrapper);
                 
                 if (video.readyState >= 1) onVideoReady();
@@ -2771,31 +2778,34 @@
         setInterval(updateTimers, 1000);
         updateTimers();
 
-        // Оптимизированный слушатель скролла с requestAnimationFrame и passive: true
-        let isScrolling = false;
         window.addEventListener('scroll', () => {
-            if (!isScrolling) {
-                window.requestAnimationFrame(() => {
-                    const h = document.documentElement;
-                    const st = h.scrollTop || document.body.scrollTop;
-                    const sh = h.scrollHeight || document.body.scrollHeight;
-                    const scrollable = sh - h.clientHeight;
-                    
-                    const pct = scrollable > 0 ? (st / scrollable) * 100 : 0;
-                    const scrollProg = document.getElementById('scroll-progress');
-                    if (scrollProg) scrollProg.style.width = pct + '%';
-                    
-                    if (siteSettings.scrollProgress) {
-                        const firefly = document.getElementById('timeline-firefly');
-                        if (firefly) {
-                            firefly.style.opacity = (st > window.innerHeight * 0.5) ? '1' : '0';
+            const h = document.documentElement;
+            const st = h.scrollTop || document.body.scrollTop;
+            const sh = h.scrollHeight || document.body.scrollHeight;
+            const pct = (st / (sh - h.clientHeight)) * 100;
+            const scrollProg = document.getElementById('scroll-progress');
+            if (scrollProg) scrollProg.style.width = pct + '%';
+            
+            if(!siteSettings.scrollProgress) return;
+            
+            const firefly = document.getElementById('timeline-firefly');
+            if (firefly) {
+                if (st > window.innerHeight * 0.5) {
+                    firefly.style.opacity = '1';
+                    document.querySelectorAll('.timeline-dot').forEach(dot => {
+                        const rect = dot.getBoundingClientRect();
+                        const cy = rect.top + rect.height / 2;
+                        if (cy > window.innerHeight * 0.45 && cy < window.innerHeight * 0.55) {
+                            dot.classList.add('glow');
+                        } else {
+                            dot.classList.remove('glow');
                         }
-                    }
-                    isScrolling = false;
-                });
-                isScrolling = true;
+                    });
+                } else {
+                    firefly.style.opacity = '0';
+                }
             }
-        }, { passive: true });
+        });
 
         window.addEventListener('DOMContentLoaded', () => { 
             loadSettings(); 
