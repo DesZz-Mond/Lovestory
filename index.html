@@ -213,8 +213,14 @@
         .media-player.teleported {
             position: fixed !important;
             z-index: 9905 !important;
-            transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), border-color var(--anim-duration) ease !important;
-            will-change: transform;
+            margin: 0 !important;
+            transition: none !important; /* Убираем транзишн на момент телепортации, чтобы не было рывков */
+            will-change: transform, box-shadow;
+            transform: translate(0, 0) scale(1) !important;
+        }
+        .media-player.teleported.is-animating {
+            /* Включаем пружинистую анимацию после подготовки */
+            transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.5s ease, border-color var(--anim-duration) ease !important;
         }
         .media-player.is-fullscreen {
             transform: translate(var(--tx, 0), var(--ty, 0)) scale(var(--scale, 2.5)) !important;
@@ -2441,28 +2447,29 @@
                 }
                 
                 if (wrapper.classList.contains('teleported')) {
+                    // Плавно возвращаем на исходную позицию (убирая .is-fullscreen, срабатывает transition назад)
                     wrapper.classList.remove('is-fullscreen', 'playing');
-                    wrapper.style.removeProperty('--tx');
-                    wrapper.style.removeProperty('--ty');
-                    wrapper.style.removeProperty('--scale');
                     
+                    // Ждем завершения CSS анимации полета (0.5s) перед возвратом в DOM
                     setTimeout(() => {
                         const placeholderId = wrapper.dataset.placeholderId;
                         const placeholder = document.getElementById(placeholderId);
                         if (placeholder && placeholder.parentElement) {
-                            wrapper.classList.remove('teleported');
+                            wrapper.classList.remove('teleported', 'is-animating');
                             wrapper.style.position = '';
                             wrapper.style.top = '';
                             wrapper.style.left = '';
                             wrapper.style.width = '';
                             wrapper.style.height = '';
-                            wrapper.style.margin = '';
                             wrapper.style.pointerEvents = '';
                             wrapper.style.zIndex = '';
+                            wrapper.style.removeProperty('--tx');
+                            wrapper.style.removeProperty('--ty');
+                            wrapper.style.removeProperty('--scale');
                             placeholder.parentElement.insertBefore(wrapper, placeholder);
                             placeholder.remove();
                         }
-                    }, 600); 
+                    }, 500); 
                 } else {
                     wrapper.classList.remove('playing');
                 }
@@ -2594,11 +2601,9 @@
                             wrapper.style.left = rect.left + 'px';
                             wrapper.style.width = rect.width + 'px';
                             wrapper.style.height = rect.height + 'px';
-                            wrapper.style.margin = '0';
                             wrapper.style.pointerEvents = 'auto';
                             
-                            wrapper.offsetHeight; // Принудительный рефлоу браузера
-                            
+                            // Подготавливаем переменные для трансформации
                             const vw = window.innerWidth;
                             const vh = window.innerHeight;
                             const targetSize = Math.min(vw * 0.9, vh * 0.8, 450); 
@@ -2611,9 +2616,12 @@
                             wrapper.style.setProperty('--ty', `${ty}px`);
                             wrapper.style.setProperty('--scale', scale);
                             
-                            wrapper.classList.add('is-fullscreen');
-                            document.body.classList.add('circle-playing');
-                            updateBodyScrollLock();
+                            // Запускаем красивую анимацию в следующем кадре, чтобы избежать рывков процессора
+                            requestAnimationFrame(() => {
+                                wrapper.classList.add('is-animating', 'is-fullscreen');
+                                document.body.classList.add('circle-playing');
+                                updateBodyScrollLock();
+                            });
                         }
 
                         try {
