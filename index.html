@@ -43,7 +43,7 @@
             --radius-card: 2rem;
             --radius-media: 1.5rem;
             --radius-btn: 9999px;
-            --anim-duration: 1.2s;
+            --anim-duration: 1.5s; /* Увеличено для более плавных фонов */
 
             --bg-color-rgb: 253 251 247;
             --text-color-rgb: 74 59 50;
@@ -96,11 +96,11 @@
         body { 
             margin: 0; padding: 0; width: 100%; min-height: 100vh;
             background-color: var(--bg-color); color: var(--text-color); 
-            transition: background-color var(--anim-duration) cubic-bezier(0.4, 0, 0.2, 1), color var(--anim-duration) cubic-bezier(0.4, 0, 0.2, 1); 
+            transition: background-color var(--anim-duration) ease-in-out, color var(--anim-duration) ease-in-out; 
             -webkit-tap-highlight-color: transparent; cursor: auto; min-width: 320px;
         }
         
-        .smooth-theme { transition: background-color var(--anim-duration) cubic-bezier(0.4, 0, 0.2, 1), color var(--anim-duration) cubic-bezier(0.4, 0, 0.2, 1), border-color var(--anim-duration) cubic-bezier(0.4, 0, 0.2, 1), fill var(--anim-duration) cubic-bezier(0.4, 0, 0.2, 1), stroke var(--anim-duration) cubic-bezier(0.4, 0, 0.2, 1), box-shadow var(--anim-duration) cubic-bezier(0.4, 0, 0.2, 1); }
+        .smooth-theme { transition: background-color var(--anim-duration) ease-in-out, color var(--anim-duration) ease-in-out, border-color var(--anim-duration) ease-in-out, fill var(--anim-duration) ease-in-out, stroke var(--anim-duration) ease-in-out, box-shadow var(--anim-duration) ease-in-out; }
         .smooth-radius { transition: border-radius 0.6s cubic-bezier(0.4, 0, 0.2, 1); }
         
         ::-webkit-scrollbar { width: 8px; }
@@ -108,11 +108,11 @@
         ::-webkit-scrollbar-thumb { background: rgb(var(--color-gold-rgb)); border-radius: 10px; border: 2px solid var(--bg-color); }
         ::-webkit-scrollbar-thumb:hover { background: rgb(var(--color-ruby-rgb)); }
 
-        .grain-overlay { position: fixed; inset: 0; pointer-events: none; z-index: 9998; opacity: 0.04; transition: opacity 0.5s; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E"); }
+        .grain-overlay { position: fixed; inset: 0; pointer-events: none; z-index: 9998; opacity: 0.04; transition: opacity 0.5s; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E"); transform: translateZ(0); will-change: opacity; }
         
-        /* Умный фон частиц (Сезонный) */
-        #particles { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; transition: opacity 0.5s; }
-        .particle { position: absolute; border-radius: 50%; opacity: 0.3; transition: background-color var(--anim-duration) cubic-bezier(0.4, 0, 0.2, 1); }
+        /* Умный фон частиц (Сезонный) с аппаратным ускорением */
+        #particles { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; transition: opacity 0.5s; transform: translateZ(0); will-change: transform; }
+        .particle { position: absolute; border-radius: 50%; opacity: 0.3; transition: background-color var(--anim-duration) cubic-bezier(0.4, 0, 0.2, 1); will-change: transform; }
         .particle { background-color: rgb(var(--color-gold-rgb)); animation: float-up linear infinite; }
         #particles.summer .particle { background-color: rgb(var(--color-gold-rgb)); animation-name: float-up; }
         #particles.autumn .particle { background-color: rgb(var(--color-gold-rgb)); animation-name: float-diagonal; }
@@ -124,11 +124,11 @@
         @keyframes float-down { 0% { transform: translateY(-10vh) scale(0.5); opacity: 0; } 20% { opacity: 0.6; } 80% { opacity: 0.6; } 100% { transform: translateY(100vh) scale(1.2); opacity: 0; } }
         @keyframes float-up-spring { 0% { transform: translate(-5vw, 100vh) scale(0.5); opacity: 0; } 20% { opacity: 0.5; } 80% { opacity: 0.5; } 100% { transform: translate(5vw, -10vh) scale(1.2); opacity: 0; } }
         
-        #cursor-glow { position: fixed; top: 0; left: 0; width: 300px; height: 300px; background: radial-gradient(circle, rgb(var(--color-ruby-rgb)) 0%, transparent 70%); border-radius: 50%; pointer-events: none; z-index: 9997; transform: translate(-50%, -50%); transition: opacity 0.5s, background var(--anim-duration); opacity: 0.08; }
+        #cursor-glow { position: fixed; top: 0; left: 0; width: 300px; height: 300px; background: radial-gradient(circle, rgb(var(--color-ruby-rgb)) 0%, transparent 70%); border-radius: 50%; pointer-events: none; z-index: 9997; transform: translate(-50%, -50%) translateZ(0); transition: opacity 0.5s, background var(--anim-duration); opacity: 0.08; will-change: transform; }
         html.dark #cursor-glow { opacity: 0.15; }
         
         /* Пульс любви (Живой прогресс-бар) */
-        #scroll-progress { position: fixed; top: 0; left: 0; width: 0%; height: 3px; background: linear-gradient(90deg, rgb(var(--color-gold-rgb)), rgb(var(--color-ruby-rgb))); z-index: 10000; transition: width 0.1s ease-out; overflow: visible; }
+        #scroll-progress { position: fixed; top: 0; left: 0; width: 0%; height: 3px; background: linear-gradient(90deg, rgb(var(--color-gold-rgb)), rgb(var(--color-ruby-rgb))); z-index: 10000; transition: width 0.15s ease-out; overflow: visible; transform: translateZ(0); }
         #scroll-progress::after {
             content: ''; position: absolute; right: -15px; top: -8px; width: 30px; height: 20px;
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 50'%3E%3Cpath d='M0,25 L15,25 L25,5 L40,45 L50,25 L100,25' fill='none' stroke='%23b55a6d' stroke-width='6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
@@ -138,38 +138,41 @@
         }
         @keyframes ecg-pulse { 0% { transform: scale(1); opacity: 0.8; } 50% { transform: scale(1.2); opacity: 1; } 100% { transform: scale(1); opacity: 0.8; } }
         
+        /* Плавные переходы цветов заднего фона */
         #ambient-breathing-bg {
             position: fixed; inset: -20%; z-index: -1; pointer-events: none;
             background: radial-gradient(circle at 50% 50%, var(--ambient-glow) 0%, transparent 60%);
-            transition: background 3.5s ease-in-out;
+            transition: background 2.5s ease-in-out;
             animation: breatheGlow 10s ease-in-out infinite alternate;
             opacity: 0.8; mix-blend-mode: multiply;
+            transform: translateZ(0); will-change: background, opacity;
         }
         html.dark #ambient-breathing-bg { opacity: 0.6; mix-blend-mode: screen; }
-        @keyframes breatheGlow { 0% { transform: scale(1); opacity: 0.6; } 100% { transform: scale(1.05); opacity: 1; } }
+        @keyframes breatheGlow { 0% { transform: scale(1) translateZ(0); opacity: 0.6; } 100% { transform: scale(1.05) translateZ(0); opacity: 1; } }
 
         /* Фоновое фото на протяжении всего сайта */
         #main-bg-image {
             position: fixed; inset: 0; z-index: -3; pointer-events: none;
             background-image: url('Фоновое фото.jpg');
             background-size: cover; background-position: center; background-attachment: fixed;
-            opacity: 0.5; transition: opacity var(--anim-duration);
+            opacity: 0.5; transition: opacity var(--anim-duration); transform: translateZ(0);
         }
         html.dark #main-bg-image { opacity: 0.25; }
         
         /* Backdrop для увеличенных кружочков - Фон затемняется и размывается */
         #circle-backdrop {
             position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-            z-index: 9900; opacity: 0; pointer-events: none; transition: opacity 0.4s ease;
+            z-index: 9900; opacity: 0; pointer-events: none; transition: opacity 0.4s ease; transform: translateZ(0);
         }
         body.circle-playing { overflow: hidden !important; }
         body.circle-playing #circle-backdrop { opacity: 1; pointer-events: auto; }
 
-        #preloader { position: fixed; inset: 0; background: var(--bg-color); z-index: 100000; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: opacity 1s ease-in-out, background-color var(--anim-duration); }
+        #preloader { position: fixed; inset: 0; background: var(--bg-color); z-index: 100000; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: opacity 1s ease-in-out, background-color var(--anim-duration); transform: translateZ(0); }
         .preloader-text { font-family: var(--font-serif), serif; font-size: 3rem; color: rgb(var(--color-ruby-rgb)); animation: pulse-soft 2s infinite alternate; }
 
-        .glass-card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: var(--radius-card); box-shadow: 0 10px 34px var(--card-shadow); transition: border-radius 0.6s ease, transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1), background-color var(--anim-duration), border-color var(--anim-duration), padding 0.5s ease; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
-        @media (hover: hover) { .glass-card:hover { box-shadow: 0 16px 42px var(--card-hover-shadow); transform: translateY(-3px); } }
+        /* Оптимизация стекломорфизма (glass-card) для мобильных */
+        .glass-card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: var(--radius-card); box-shadow: 0 10px 34px var(--card-shadow); transition: border-radius 0.6s ease, transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1), background-color var(--anim-duration), border-color var(--anim-duration), padding 0.5s ease; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); transform: translateZ(0); will-change: transform, box-shadow; backface-visibility: hidden; }
+        @media (hover: hover) { .glass-card:hover { box-shadow: 0 16px 42px var(--card-hover-shadow); transform: translateY(-3px) translateZ(0); } }
         
         @keyframes gentleHeartbeat { 0% { transform: scale(1); } 50% { transform: scale(1.015); } 100% { transform: scale(1); } }
         .heartbeat-wrapper { animation: gentleHeartbeat 4.5s ease-in-out infinite; will-change: transform; transform-origin: center; display: block; }
@@ -181,10 +184,10 @@
             box-shadow: inset 0 2px 4px rgba(255,255,255,0.5), 0 4px 12px rgba(74, 59, 50, 0.08);
             backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); color: var(--text-color);
             transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), background-color var(--anim-duration), border-color var(--anim-duration), border-radius 0.6s ease, box-shadow 0.4s, color 0.4s;
-            cursor: pointer;
+            cursor: pointer; transform: translateZ(0);
         }
         html.dark .panel-btn { background: rgba(40, 35, 45, 0.85); border-color: rgba(255, 255, 255, 0.1); box-shadow: inset 0 2px 4px rgba(255,255,255,0.05), 0 4px 12px rgba(0,0,0,0.4); color: var(--text-light); }
-        .panel-btn:hover { transform: translateY(-3px) scale(1.05); box-shadow: inset 0 2px 4px rgba(255,255,255,0.7), 0 8px 20px rgba(var(--color-ruby-rgb), 0.2); color: rgb(var(--color-ruby-rgb)); border-color: rgba(var(--color-ruby-rgb), 0.3); }
+        .panel-btn:hover { transform: translateY(-3px) scale(1.05) translateZ(0); box-shadow: inset 0 2px 4px rgba(255,255,255,0.7), 0 8px 20px rgba(var(--color-ruby-rgb), 0.2); color: rgb(var(--color-ruby-rgb)); border-color: rgba(var(--color-ruby-rgb), 0.3); }
         html.dark .panel-btn:hover { box-shadow: inset 0 2px 4px rgba(255,255,255,0.1), 0 8px 20px rgba(var(--color-ruby-rgb), 0.25); color: rgb(var(--color-ruby-rgb)); border-color: rgba(var(--color-ruby-rgb), 0.3); }
 
         .reveal-node { opacity: 0; transform: translateY(40px); transition: opacity 1s cubic-bezier(0.16, 1, 0.3, 1), transform 1s cubic-bezier(0.16, 1, 0.3, 1); will-change: opacity, transform; }
@@ -199,7 +202,7 @@
             100% { box-shadow: 0 0 0 0 rgba(var(--color-ruby-rgb), 0); } 
         }
 
-        .media-player { position: relative; isolation: isolate; display: flex; align-items: center; justify-content: center; border-radius: var(--radius-media); overflow: hidden; border: 1px solid var(--card-border); background: var(--player-bg); transition: border-radius 0.6s ease, transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), border-color var(--anim-duration) ease; z-index: 1; transform-origin: center; -webkit-transform: translateZ(0); cursor: pointer; }
+        .media-player { position: relative; isolation: isolate; display: flex; align-items: center; justify-content: center; border-radius: var(--radius-media); overflow: hidden; border: 1px solid var(--card-border); background: var(--player-bg); transition: border-radius 0.6s ease, transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), border-color var(--anim-duration) ease; z-index: 1; transform-origin: center; -webkit-transform: translateZ(0); transform: translateZ(0); will-change: transform; cursor: pointer; }
         .media-player.playing { z-index: 50; box-shadow: 0 25px 50px -10px rgba(var(--color-ruby-rgb), 0.5), 0 0 40px rgba(var(--color-ruby-rgb), 0.3); transform: scale(1.08) translateY(-6px) translateZ(0); border-color: rgb(var(--color-ruby-rgb)); }
         html.dark .media-player.playing { box-shadow: 0 35px 70px rgba(0,0,0,0.9), 0 0 50px rgba(var(--color-ruby-rgb), 0.4); }
         @media (max-width: 767px) { .media-player.playing { transform: scale(1.05) translateY(-3px) translateZ(0); z-index: 50; } }
@@ -244,7 +247,7 @@
         @keyframes floatSmooth { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
         .animate-float { animation: floatSmooth 6s ease-in-out infinite; }
 
-        #lightbox { transition: opacity 0.4s ease; backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); background: rgba(0,0,0,0.85); }
+        #lightbox { transition: opacity 0.4s ease; backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); background: rgba(0,0,0,0.85); transform: translateZ(0); }
         #lightbox img { transition: transform 0.4s ease, filter 0.8s ease; transform: scale(0.95); box-shadow: 0 20px 50px rgba(0,0,0,0.5); border-radius: var(--radius-media); }
         #lightbox.active img { transform: scale(1); }
 
@@ -314,21 +317,23 @@
         @media (min-width: 768px) { .timeline-item { margin-bottom: 6rem; padding-left: 3rem; } }
         .timeline-line { position: absolute; left: 8px; top: 0; bottom: -4rem; width: 2px; background: var(--timeline-line); transition: background-color var(--anim-duration); z-index: 0; }
         @media (min-width: 768px) { .timeline-line { left: 16px; bottom: -6rem; background: linear-gradient(to bottom, transparent, var(--timeline-line), transparent); } }
-        .timeline-dot { position: absolute; left: 8px; top: 2.5rem; transform: translateX(-50%); width: 12px; height: 12px; border-radius: 50%; background: rgb(var(--color-ruby-rgb)); border: 2px solid var(--bg-color); box-shadow: 0 0 0 3px rgba(var(--color-ruby-rgb), 0.1); z-index: 2; transition: all 0.5s, background-color var(--anim-duration), border-color var(--anim-duration), box-shadow var(--anim-duration); will-change: box-shadow, transform; }
+        
+        /* Улучшена производительность свечения точек (аппаратное ускорение) */
+        .timeline-dot { position: absolute; left: 8px; top: 2.5rem; transform: translateX(-50%) translateZ(0); width: 12px; height: 12px; border-radius: 50%; background: rgb(var(--color-ruby-rgb)); border: 2px solid var(--bg-color); box-shadow: 0 0 0 3px rgba(var(--color-ruby-rgb), 0.1); z-index: 2; transition: all 0.5s, background-color var(--anim-duration), border-color var(--anim-duration), box-shadow var(--anim-duration); will-change: box-shadow, transform; }
         @media (min-width: 768px) { .timeline-dot { left: 16px; top: 4rem; width: 16px; height: 16px; border-width: 4px; box-shadow: 0 0 0 4px rgba(var(--color-ruby-rgb), 0.1); } }
-        .timeline-item:hover .timeline-dot { transform: translateX(-50%) scale(1.3); box-shadow: 0 0 0 6px rgba(var(--color-ruby-rgb), 0.2); }
+        .timeline-item:hover .timeline-dot { transform: translateX(-50%) scale(1.3) translateZ(0); box-shadow: 0 0 0 6px rgba(var(--color-ruby-rgb), 0.2); }
+        .timeline-dot.glow { box-shadow: 0 0 15px 5px rgba(var(--color-ruby-rgb), 0.8) !important; background: #fff !important; transform: translateX(-50%) scale(1.5) translateZ(0) !important; }
         
         #timeline-firefly {
             position: fixed; top: 50vh; width: 16px; height: 16px; border-radius: 50%;
             background: radial-gradient(circle, rgb(var(--color-ruby-rgb)) 0%, transparent 70%);
             box-shadow: 0 0 20px 5px rgba(var(--color-ruby-rgb), 0.6);
             z-index: 5; pointer-events: none; opacity: 0; transition: opacity 0.5s;
-            transform: translate(-50%, -50%); left: 8px;
+            transform: translate(-50%, -50%) translateZ(0); left: 8px; will-change: opacity;
         }
         @media (min-width: 768px) { #timeline-firefly { left: 16px; } }
         html[data-layout="compact"] #timeline-firefly { left: 4px; }
         @media (max-width: 767px) { html[data-layout="compact"] #timeline-firefly { left: 4px; } }
-        .timeline-dot.glow { box-shadow: 0 0 15px 5px rgba(var(--color-ruby-rgb), 0.8) !important; background: #fff !important; transform: translateX(-50%) scale(1.5) !important; }
 
         html[data-layout="compact"] .glass-card { padding: 1.25rem !important; }
         html[data-layout="compact"] .timeline-item { margin-bottom: 2.5rem !important; }
@@ -343,7 +348,7 @@
         .hidden-heart:hover, .hidden-heart:active { opacity: 1; transform: scale(1.2); }
         .hidden-heart.found { color: rgb(var(--color-gold-rgb)); animation: none; cursor: default; opacity: 1; pointer-events: none; }
         
-        #quest-modal { transition: opacity 0.5s ease; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); background: rgba(0,0,0,0.8); }
+        #quest-modal { transition: opacity 0.5s ease; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); background: rgba(0,0,0,0.8); transform: translateZ(0); }
         #quest-modal-content { transition: transform 0.5s ease, border-radius 0.6s; transform: translateY(50px) scale(0.9); border-radius: var(--radius-card); }
         #quest-modal.active { opacity: 1; pointer-events: auto; }
         #quest-modal.active #quest-modal-content { transform: translateY(0) scale(1); }
@@ -355,10 +360,10 @@
         .meetings-scroll::-webkit-scrollbar-thumb:hover { background: rgb(var(--color-ruby-rgb)); }
 
         #toc-overlay { -webkit-backdrop-filter: blur(4px); transition: opacity 0.5s; }
-        #toc-drawer { -webkit-backdrop-filter: blur(12px); transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        #toc-drawer { -webkit-backdrop-filter: blur(12px); transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); will-change: transform; }
         
         #settings-overlay { transition: opacity 0.5s; }
-        #settings-drawer { background-color: var(--settings-bg); transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.4s ease, border-radius 0.6s; }
+        #settings-drawer { background-color: var(--settings-bg); transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.4s ease, border-radius 0.6s; will-change: transform; }
         
         .custom-scrollbar::-webkit-scrollbar { width: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
@@ -603,11 +608,11 @@
 
     <header class="w-full min-h-[100svh] flex flex-col justify-center items-center text-center relative z-10 px-4 overflow-hidden smooth-theme">
         <div class="absolute inset-0 z-[-2] w-full h-full">
-            <div class="absolute inset-0 w-full h-full bg-cover bg-center bg-no-repeat" style="background-image: url('фото на фон начала сайта.jpg'); transition: filter 0.8s ease;"></div>
-            <div class="absolute inset-0 bg-black/40 transition-opacity duration-[1200ms] ease-[cubic-bezier(0.4,0,0.2,1)] opacity-100 dark:opacity-0"></div>
-            <div class="absolute inset-x-0 bottom-0 h-32 md:h-40 bg-gradient-to-t from-brand-bg to-transparent transition-opacity duration-[1200ms] ease-[cubic-bezier(0.4,0,0.2,1)] opacity-100 dark:opacity-0"></div>
-            <div class="absolute inset-0 bg-black/60 transition-opacity duration-[1200ms] ease-[cubic-bezier(0.4,0,0.2,1)] opacity-0 dark:opacity-100"></div>
-            <div class="absolute inset-x-0 bottom-0 h-32 md:h-40 bg-gradient-to-t from-[#0b090f] to-transparent transition-opacity duration-[1200ms] ease-[cubic-bezier(0.4,0,0.2,1)] opacity-0 dark:opacity-100"></div>
+            <div class="absolute inset-0 w-full h-full bg-cover bg-center bg-no-repeat" style="background-image: url('фото на фон начала сайта.jpg'); transition: filter 0.8s ease; transform: translateZ(0);"></div>
+            <div class="absolute inset-0 bg-black/40 transition-opacity duration-[1500ms] ease-[cubic-bezier(0.4,0,0.2,1)] opacity-100 dark:opacity-0 transform translateZ(0)"></div>
+            <div class="absolute inset-x-0 bottom-0 h-32 md:h-40 bg-gradient-to-t from-brand-bg to-transparent transition-opacity duration-[1500ms] ease-[cubic-bezier(0.4,0,0.2,1)] opacity-100 dark:opacity-0 transform translateZ(0)"></div>
+            <div class="absolute inset-0 bg-black/60 transition-opacity duration-[1500ms] ease-[cubic-bezier(0.4,0,0.2,1)] opacity-0 dark:opacity-100 transform translateZ(0)"></div>
+            <div class="absolute inset-x-0 bottom-0 h-32 md:h-40 bg-gradient-to-t from-[#0b090f] to-transparent transition-opacity duration-[1500ms] ease-[cubic-bezier(0.4,0,0.2,1)] opacity-0 dark:opacity-100 transform translateZ(0)"></div>
         </div>
 
         <div class="relative z-10 w-full max-w-5xl mx-auto flex flex-col items-center justify-center py-20 animate-fade-in-up">
@@ -900,7 +905,8 @@
                 root.style.setProperty('--radius-btn', '0.5rem');
             }
             
-            root.style.setProperty('--anim-duration', siteSettings.animSpeed === 'fast' ? '0.4s' : '1.2s');
+            // Сделано еще плавнее
+            root.style.setProperty('--anim-duration', siteSettings.animSpeed === 'fast' ? '0.6s' : '1.5s');
             root.setAttribute('data-layout', siteSettings.layoutCompact ? 'compact' : 'normal');
 
             const pCont = document.getElementById('particles');
@@ -1012,15 +1018,15 @@
                 updateBodyScrollLock();
             });
         }
-        function closeToc() {
+        window.closeToc = function() {
             if (tocDrawer) { tocDrawer.classList.remove('translate-x-0'); tocDrawer.classList.add('-translate-x-full'); }
             if (tocOverlay) { tocOverlay.classList.add('opacity-0', 'pointer-events-none'); }
             updateBodyScrollLock();
-        }
+        };
 
         window.handleTocClick = function(e, targetId) {
             e.preventDefault();
-            closeToc();
+            window.closeToc();
             setTimeout(() => {
                 const target = document.getElementById(targetId);
                 if (target) target.scrollIntoView({ behavior: 'smooth' });
@@ -1031,19 +1037,19 @@
         const settingsOverlay = document.getElementById('settings-overlay');
         const settingsWrapper = document.getElementById('settings-wrapper');
         
-        function openSettings() {
+        window.openSettings = function() {
             settingsOverlay.classList.remove('opacity-0', 'pointer-events-none'); 
             settingsDrawer.classList.remove('translate-y-32', 'scale-95', 'opacity-0', 'pointer-events-none'); 
             settingsDrawer.classList.add('translate-y-0', 'scale-100', 'opacity-1', 'pointer-events-auto');
-            closeToc();
+            window.closeToc();
             updateBodyScrollLock();
-        }
-        function closeSettings() {
+        };
+        window.closeSettings = function() {
             settingsOverlay.classList.add('opacity-0', 'pointer-events-none'); 
             settingsDrawer.classList.remove('translate-y-0', 'scale-100', 'opacity-1', 'pointer-events-auto'); 
             settingsDrawer.classList.add('translate-y-32', 'scale-95', 'opacity-0', 'pointer-events-none');
             updateBodyScrollLock();
-        }
+        };
 
         const memories = [
             {
@@ -2351,17 +2357,22 @@
                     }
                 }
             });
-        }, { rootMargin: "-30% 0px -30% 0px" });
+        }, { rootMargin: "-40% 0px -40% 0px" });
 
         document.querySelectorAll('.timeline-item').forEach(el => colorObserver.observe(el));
 
+        // Оптимизация свечения точек - работает только через Observer, без дублирования в scroll
         const dotObserver = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
                 if(entry.isIntersecting) entry.target.classList.add('glow');
                 else entry.target.classList.remove('glow');
             });
-        }, { rootMargin: "-49% 0px -49% 0px" });
-        document.querySelectorAll('.timeline-dot').forEach(d => dotObserver.observe(d));
+        }, { rootMargin: "-45% 0px -45% 0px" });
+        
+        // Маленький таймаут чтобы DOM точно успел отрендерить добавленные точки
+        setTimeout(() => {
+            document.querySelectorAll('.timeline-dot').forEach(d => dotObserver.observe(d));
+        }, 100);
 
         const revealObserver = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
@@ -2498,7 +2509,7 @@
                             } 
                         }
                     });
-                }, { threshold: 0.2 });
+                }, { rootMargin: "300px" }); // Начинает грузить видео до того как оно появилось на экране
                 vObs.observe(wrapper);
                 
                 if (video.readyState >= 1) onVideoReady();
@@ -2763,34 +2774,31 @@
         setInterval(updateTimers, 1000);
         updateTimers();
 
+        // Оптимизированный слушатель скролла с requestAnimationFrame и passive: true
+        let isScrolling = false;
         window.addEventListener('scroll', () => {
-            const h = document.documentElement;
-            const st = h.scrollTop || document.body.scrollTop;
-            const sh = h.scrollHeight || document.body.scrollHeight;
-            const pct = (st / (sh - h.clientHeight)) * 100;
-            const scrollProg = document.getElementById('scroll-progress');
-            if (scrollProg) scrollProg.style.width = pct + '%';
-            
-            if(!siteSettings.scrollProgress) return;
-            
-            const firefly = document.getElementById('timeline-firefly');
-            if (firefly) {
-                if (st > window.innerHeight * 0.5) {
-                    firefly.style.opacity = '1';
-                    document.querySelectorAll('.timeline-dot').forEach(dot => {
-                        const rect = dot.getBoundingClientRect();
-                        const cy = rect.top + rect.height / 2;
-                        if (cy > window.innerHeight * 0.45 && cy < window.innerHeight * 0.55) {
-                            dot.classList.add('glow');
-                        } else {
-                            dot.classList.remove('glow');
+            if (!isScrolling) {
+                window.requestAnimationFrame(() => {
+                    const h = document.documentElement;
+                    const st = h.scrollTop || document.body.scrollTop;
+                    const sh = h.scrollHeight || document.body.scrollHeight;
+                    const scrollable = sh - h.clientHeight;
+                    
+                    const pct = scrollable > 0 ? (st / scrollable) * 100 : 0;
+                    const scrollProg = document.getElementById('scroll-progress');
+                    if (scrollProg) scrollProg.style.width = pct + '%';
+                    
+                    if (siteSettings.scrollProgress) {
+                        const firefly = document.getElementById('timeline-firefly');
+                        if (firefly) {
+                            firefly.style.opacity = (st > window.innerHeight * 0.5) ? '1' : '0';
                         }
-                    });
-                } else {
-                    firefly.style.opacity = '0';
-                }
+                    }
+                    isScrolling = false;
+                });
+                isScrolling = true;
             }
-        });
+        }, { passive: true });
 
         window.addEventListener('DOMContentLoaded', () => { 
             loadSettings(); 
