@@ -153,9 +153,14 @@
         /* Фоновое фото на протяжении всего сайта */
         #main-bg-image {
             position: fixed; inset: 0; z-index: -3; pointer-events: none;
-            background-image: url('Фоновое фото.jpg');
+            background-image: url('Фоновое фото.jpg'); /* Для мобильных */
             background-size: cover; background-position: center; background-attachment: fixed;
             opacity: 0.5; transition: opacity var(--anim-duration); transform: translateZ(0);
+        }
+        @media (min-width: 768px) {
+            #main-bg-image {
+                background-image: url('IMG_20260603_201045_875 (1).jpg'); /* Для ПК */
+            }
         }
         html.dark #main-bg-image { opacity: 0.25; }
         
