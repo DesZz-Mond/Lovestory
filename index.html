@@ -123,7 +123,7 @@
 
         #main-bg-image {
             position: fixed; inset: 0; z-index: -3; pointer-events: none;
-            background-image: url('Фоновое фото.jpg'); /* Для мобильных */
+            background-image: url('Фоновое фото.jpg');
             background-size: cover; background-position: center;
             opacity: 0.25; transition: opacity var(--anim-duration); 
             transform: translate3d(0,0,0); -webkit-transform: translate3d(0,0,0);
@@ -131,7 +131,7 @@
         }
         @media (min-width: 768px) {
             #main-bg-image {
-                background-image: url('IMG_20260603_201045_875 (1).jpg'); /* Для ПК */
+                background-image: url('IMG_20260603_201045_875 (1).jpg');
             }
         }
         
@@ -308,8 +308,8 @@
         .meetings-scroll::-webkit-scrollbar-thumb { background: var(--card-border); border-radius: 10px; }
         .meetings-scroll::-webkit-scrollbar-thumb:hover { background: rgb(var(--color-ruby-rgb)); }
 
-        #toc-overlay { -webkit-backdrop-filter: blur(4px); transition: opacity 0.5s; }
-        #toc-drawer { -webkit-backdrop-filter: blur(12px); transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); will-change: transform; }
+        #toc-overlay { -webkit-backdrop-filter: blur(8px); transition: opacity 0.4s ease; }
+        #toc-drawer { background-color: var(--settings-bg); transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.4s ease, border-radius 0.6s; will-change: transform; }
         
         #settings-overlay { transition: opacity 0.5s; }
         #settings-drawer { background-color: var(--settings-bg); transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.4s ease, border-radius 0.6s; will-change: transform; }
@@ -397,15 +397,17 @@
         </div>
     </div>
 
-    <div id="toc-overlay" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100] opacity-0 pointer-events-none" onclick="closeToc()"></div>
-    <div id="toc-drawer" class="fixed top-0 left-0 bottom-0 w-[85vw] max-w-sm bg-brand-bg/95 backdrop-blur-md border-r border-brand-gold/30 z-[101] transform -translate-x-full overflow-y-auto shadow-2xl -webkit-overflow-scrolling-touch smooth-theme">
-        <div class="p-6 md:p-8 pb-20">
-            <div class="flex flex-col items-center mb-8 md:mb-10 border-b border-brand-gold/20 pb-6 relative">
-                <h2 class="font-serif text-3xl text-brand-ruby text-center smooth-theme">Оглавление</h2>
-                <div class="w-12 h-[1px] bg-brand-gold/50 mt-4"></div>
-                <button onclick="closeToc()" class="absolute top-0 right-0 w-10 h-10 flex items-center justify-center bg-brand-gold/10 text-brand-text hover:text-brand-ruby hover:scale-110 transition-transform border border-brand-gold/30 smooth-radius" style="border-radius: var(--radius-btn);"><i class="fas fa-times text-lg"></i></button>
+    <div id="toc-overlay" class="fixed inset-0 bg-black/60 backdrop-blur-md z-[100] opacity-0 pointer-events-none" onclick="closeToc()"></div>
+    <div id="toc-container" class="fixed inset-0 z-[101] flex items-center justify-center px-4 md:px-0 pointer-events-none">
+        <div id="toc-drawer" class="w-full max-w-md max-h-[85vh] border border-brand-gold/30 shadow-2xl overflow-y-auto transform translate-y-10 scale-95 opacity-0 pointer-events-none rounded-[2rem] relative custom-scrollbar smooth-theme transition-all duration-500">
+            <div class="p-6 md:p-8">
+                <div class="flex flex-col items-center mb-6 border-b border-brand-gold/20 pb-5 relative">
+                    <h2 class="font-serif text-2xl md:text-3xl text-brand-ruby text-center smooth-theme">Оглавление</h2>
+                    <div class="w-12 h-[1px] bg-brand-gold/50 mt-3"></div>
+                    <button onclick="closeToc()" class="absolute top-0 right-0 w-10 h-10 flex items-center justify-center bg-brand-gold/10 text-brand-text hover:text-brand-ruby hover:scale-110 transition-transform border border-brand-gold/30 smooth-radius" style="border-radius: var(--radius-btn);"><i class="fas fa-times text-lg"></i></button>
+                </div>
+                <div id="toc-links" class="flex flex-col gap-3 md:gap-4"></div>
             </div>
-            <div id="toc-links" class="flex flex-col gap-3 md:gap-4"></div>
         </div>
     </div>
 
@@ -795,16 +797,76 @@
 
         const tocDrawer = document.getElementById('toc-drawer'); const tocOverlay = document.getElementById('toc-overlay');
         document.getElementById('toc-toggle')?.addEventListener('click', () => {
-            if (tocDrawer) { tocDrawer.classList.remove('-translate-x-full'); tocDrawer.classList.add('translate-x-0'); }
+            if (tocDrawer) { 
+                tocDrawer.classList.remove('translate-y-10', 'scale-95', 'opacity-0', 'pointer-events-none'); 
+                tocDrawer.classList.add('translate-y-0', 'scale-100', 'opacity-1', 'pointer-events-auto'); 
+            }
             if (tocOverlay) tocOverlay.classList.remove('opacity-0', 'pointer-events-none');
             updateBodyScrollLock();
         });
+
         window.closeToc = function() {
-            if (tocDrawer) { tocDrawer.classList.remove('translate-x-0'); tocDrawer.classList.add('-translate-x-full'); }
+            if (tocDrawer) { 
+                tocDrawer.classList.remove('translate-y-0', 'scale-100', 'opacity-1', 'pointer-events-auto'); 
+                tocDrawer.classList.add('translate-y-10', 'scale-95', 'opacity-0', 'pointer-events-none'); 
+            }
             if (tocOverlay) tocOverlay.classList.add('opacity-0', 'pointer-events-none');
             updateBodyScrollLock();
         };
-        window.handleTocClick = function(e, targetId) { e.preventDefault(); window.closeToc(); setTimeout(() => { const target = document.getElementById(targetId); if (target) target.scrollIntoView({ behavior: 'smooth' }); }, 150); };
+
+        window.handleTocClick = function(e, targetId) { 
+            e.preventDefault(); 
+            window.closeToc(); 
+            
+            setTimeout(() => { 
+                const target = document.getElementById(targetId); 
+                if (!target) return; 
+
+                // Важно: чтобы при скролле не прыгала страница из-за ленивой загрузки (lazy-load), 
+                // мы принудительно рендерим все блоки ДО нужной главы перед перемоткой.
+                const allItems = document.querySelectorAll('.timeline-item');
+                for (let item of allItems) {
+                    if (item.compareDocumentPosition(target) & Node.DOCUMENT_POSITION_PRECEDING) {
+                        break; // Если элемент находится ПОСЛЕ целевого - останавливаемся
+                    }
+                    if (item.dataset.htmlContent) {
+                        const wrapper = item.querySelector('.lazy-wrapper');
+                        if (wrapper) {
+                            wrapper.innerHTML = item.dataset.htmlContent;
+                            wrapper.classList.remove('lazy-wrapper');
+                            initImageFrames(item);
+                            initVideoPlayers();
+                        }
+                        delete item.dataset.htmlContent;
+                    }
+                }
+
+                // Рендерим саму цель
+                if (target.dataset.htmlContent) {
+                    const wrapper = target.querySelector('.lazy-wrapper');
+                    if (wrapper) {
+                        wrapper.innerHTML = target.dataset.htmlContent;
+                        wrapper.classList.remove('lazy-wrapper');
+                    }
+                    delete target.dataset.htmlContent;
+                    initImageFrames(target);
+                    initVideoPlayers();
+                }
+
+                // Ждем долю секунды, чтобы браузер пересчитал высоту контента
+                setTimeout(() => {
+                    const headerOffset = window.innerWidth < 768 ? 60 : 100;
+                    const elementPosition = target.getBoundingClientRect().top;
+                    const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+                    
+                    window.scrollTo({
+                        top: offsetPosition,
+                        behavior: "smooth"
+                    });
+                }, 50);
+
+            }, 300); // Ждем пока закроется окно оглавления
+        };
 
         const settingsDrawer = document.getElementById('settings-drawer'); const settingsOverlay = document.getElementById('settings-overlay');
         window.openSettings = function() {
@@ -1104,12 +1166,14 @@
         ];
 
         const tocLinksContainer = document.getElementById('toc-links');
+        const linkClass = "block p-4 md:p-5 rounded-2xl border border-brand-gold/10 bg-brand-gold/5 hover:border-brand-ruby/50 hover:bg-brand-ruby/10 transition-all duration-300 group text-center smooth-theme";
+        
         tocLinksContainer.innerHTML = `
-            <a href="#special-dates" class="block p-4 md:p-5 rounded-2xl border border-transparent hover:border-brand-gold/30 hover:bg-brand-gold/5 transition-colors duration-300 group text-center smooth-theme" onclick="handleTocClick(event, 'special-dates')">
+            <a href="#special-dates" class="${linkClass}" onclick="handleTocClick(event, 'special-dates')">
                 <div class="text-[10px] font-sans text-brand-light uppercase tracking-widest mb-1 md:mb-2 group-hover:text-brand-ruby smooth-theme">Созвездие</div>
                 <div class="font-serif text-lg md:text-xl text-brand-text group-hover:text-brand-ruby smooth-theme">Наших Дат</div>
             </a>
-            <a href="#meetings" class="block p-4 md:p-5 rounded-2xl border border-transparent hover:border-brand-gold/30 hover:bg-brand-gold/5 transition-colors duration-300 group text-center smooth-theme" onclick="handleTocClick(event, 'meetings')">
+            <a href="#meetings" class="${linkClass}" onclick="handleTocClick(event, 'meetings')">
                 <div class="text-[10px] font-sans text-brand-light uppercase tracking-widest mb-1 md:mb-2 group-hover:text-brand-ruby smooth-theme">Журнал</div>
                 <div class="font-serif text-lg md:text-xl text-brand-text group-hover:text-brand-ruby smooth-theme">Наши Встречи</div>
             </a>
@@ -1217,7 +1281,8 @@
                     const chapterId = `chapter-${index}`;
                     timelineContainer.insertAdjacentHTML('beforeend', `<div id="${chapterId}" class="w-full text-center py-16 md:py-20 reveal-node relative mt-6 md:mt-10 mb-6 md:mb-10 col-span-full smooth-theme" style="scroll-margin-top: 4rem;"><h2 class="font-serif text-3xl sm:text-4xl md:text-6xl text-brand-ruby mb-3 md:mb-4 relative z-10 smooth-theme">${block.chapter}</h2><p class="text-brand-light font-sans text-sm md:text-base font-light italic max-w-md mx-auto relative z-10 px-4 smooth-theme">${block.chapterDesc}</p></div>`);
                     let shortChapterTitle = block.chapter.split(':')[0]; let chapterName = block.chapter.split(':')[1] || '';
-                    tocLinksContainer.insertAdjacentHTML('beforeend', `<a href="#${chapterId}" class="block p-4 md:p-5 rounded-2xl border border-transparent hover:border-brand-gold/30 hover:bg-brand-gold/5 transition-colors duration-300 group text-center smooth-theme" onclick="handleTocClick(event, '${chapterId}')"><div class="text-[10px] font-sans text-brand-light uppercase tracking-widest mb-1 md:mb-2 group-hover:text-brand-ruby smooth-theme">${shortChapterTitle}</div><div class="font-serif text-lg md:text-xl text-brand-text group-hover:text-brand-ruby transition-colors leading-tight smooth-theme">${chapterName.trim()}</div></a>`);
+                    
+                    tocLinksContainer.insertAdjacentHTML('beforeend', `<a href="#${chapterId}" class="${linkClass}" onclick="handleTocClick(event, '${chapterId}')"><div class="text-[10px] font-sans text-brand-light uppercase tracking-widest mb-1 md:mb-2 group-hover:text-brand-ruby smooth-theme">${shortChapterTitle}</div><div class="font-serif text-lg md:text-xl text-brand-text group-hover:text-brand-ruby transition-colors leading-tight smooth-theme">${chapterName.trim()}</div></a>`);
                 }
 
                 let cardClasses = 'glass-card w-full relative overflow-hidden p-6 sm:p-8 md:p-10 ';
