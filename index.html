@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ru" class="scroll-smooth antialiased dark" data-layout="normal">
+<html lang="ru" class="antialiased dark" data-layout="normal">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
@@ -55,11 +55,11 @@
             --bg-color: rgb(var(--bg-color-rgb));
             --text-color: rgb(var(--text-color-rgb));
             --text-light: rgb(var(--text-light-rgb));
-            --card-bg: rgba(var(--card-bg-rgb), 0.6);
+            --card-bg: rgb(var(--card-bg-rgb) / 0.6);
 
             --card-border: rgba(212, 184, 143, 0.15);
             --card-shadow: rgba(0, 0, 0, 0.4);
-            --card-hover-shadow: rgba(var(--color-ruby-rgb), 0.15);
+            --card-hover-shadow: rgb(var(--color-ruby-rgb) / 0.15);
             --timeline-line: rgba(212, 184, 143, 0.2);
             --quote-bg: linear-gradient(90deg, transparent, rgba(212, 184, 143, 0.05), transparent);
             --player-bg: #1a1520;
@@ -68,21 +68,25 @@
             --ambient-glow: transparent;
         }
 
-        html { overflow-x: hidden; width: 100vw; }
-
+        html {
+            scrollbar-width: thin;
+            scrollbar-color: rgb(var(--color-gold-rgb) / 0.7) var(--bg-color);
+        }
+        
         body { 
             margin: 0; padding: 0; width: 100%; min-height: 100vh;
             background-color: var(--bg-color); color: var(--text-color); 
             transition: background-color var(--anim-duration) ease-in-out, color var(--anim-duration) ease-in-out; 
             -webkit-tap-highlight-color: transparent; cursor: auto; min-width: 320px;
+            overflow-x: hidden;
         }
         
         .smooth-theme { transition: background-color var(--anim-duration) ease-in-out, color var(--anim-duration) ease-in-out, border-color var(--anim-duration) ease-in-out, fill var(--anim-duration) ease-in-out, stroke var(--anim-duration) ease-in-out, box-shadow var(--anim-duration) ease-in-out; }
         .smooth-radius { transition: border-radius 0.6s cubic-bezier(0.4, 0, 0.2, 1); }
         
-        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
         ::-webkit-scrollbar-track { background: var(--bg-color); }
-        ::-webkit-scrollbar-thumb { background: rgb(var(--color-gold-rgb)); border-radius: 10px; border: 2px solid var(--bg-color); }
+        ::-webkit-scrollbar-thumb { background: rgb(var(--color-gold-rgb) / 0.7); border-radius: 10px; border: 2px solid var(--bg-color); transition: background-color 0.3s; }
         ::-webkit-scrollbar-thumb:hover { background: rgb(var(--color-ruby-rgb)); }
 
         #particles { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; transition: opacity 0.5s; transform: translate3d(0,0,0); -webkit-transform: translate3d(0,0,0); contain: strict; }
@@ -100,13 +104,22 @@
         
         #cursor-glow { position: fixed; top: 0; left: 0; width: 300px; height: 300px; background: radial-gradient(circle, rgb(var(--color-ruby-rgb)) 0%, transparent 70%); border-radius: 50%; pointer-events: none; z-index: 9997; transform: translate3d(-50%, -50%, 0); -webkit-transform: translate3d(-50%, -50%, 0); transition: opacity 0.5s, background var(--anim-duration); opacity: 0.15; will-change: transform; }
         
-        #scroll-progress { position: fixed; top: 0; left: 0; width: 0%; height: 3px; background: linear-gradient(90deg, rgb(var(--color-gold-rgb)), rgb(var(--color-ruby-rgb))); z-index: 10000; transition: width 0.1s ease-out; overflow: visible; transform: translate3d(0,0,0); -webkit-transform: translate3d(0,0,0); will-change: width; }
-        #scroll-progress::after {
-            content: ''; position: absolute; right: -15px; top: -8px; width: 30px; height: 20px;
+        #scroll-progress-container {
+            position: fixed; top: 0; left: 0; width: 100%; height: 3px; z-index: 10000;
+            pointer-events: none; transition: opacity 0.4s ease;
+        }
+        #scroll-progress-bar {
+            position: absolute; top: 0; left: 0; height: 100%; width: 100%;
+            background: linear-gradient(90deg, rgb(var(--color-gold-rgb)), rgb(var(--color-ruby-rgb)));
+            transform-origin: left; transform: scaleX(0); will-change: transform;
+        }
+        #scroll-progress-icon {
+            position: absolute; left: 0; top: -8px; width: 30px; height: 20px; /* Убран отрицательный отступ left: -15px для избегания дерганий */
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 50'%3E%3Cpath d='M0,25 L15,25 L25,5 L40,45 L50,25 L100,25' fill='none' stroke='%23b55a6d' stroke-width='6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
             background-repeat: no-repeat; background-size: contain;
             filter: drop-shadow(0 0 4px rgba(181, 90, 109, 0.8));
             animation: ecg-pulse 1.2s infinite linear;
+            will-change: transform; transform: translate3d(0,0,0);
         }
         @keyframes ecg-pulse { 0% { transform: scale(1); opacity: 0.8; } 50% { transform: scale(1.2); opacity: 1; } 100% { transform: scale(1); opacity: 0.8; } }
         
@@ -159,7 +172,7 @@
             transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), background-color var(--anim-duration), border-color var(--anim-duration), border-radius 0.6s ease, box-shadow 0.4s, color 0.4s;
             cursor: pointer; transform: translate3d(0,0,0); -webkit-transform: translate3d(0,0,0);
         }
-        .panel-btn:hover { transform: translate3d(0,-3px,0) scale(1.05); -webkit-transform: translate3d(0,-3px,0) scale(1.05); box-shadow: inset 0 2px 4px rgba(255,255,255,0.1), 0 8px 20px rgba(var(--color-ruby-rgb), 0.25); color: rgb(var(--color-ruby-rgb)); border-color: rgba(var(--color-ruby-rgb), 0.3); }
+        .panel-btn:hover { transform: translate3d(0,-3px,0) scale(1.05); -webkit-transform: translate3d(0,-3px,0) scale(1.05); box-shadow: inset 0 2px 4px rgba(255,255,255,0.1), 0 8px 20px rgb(var(--color-ruby-rgb) / 0.25); color: rgb(var(--color-ruby-rgb)); border-color: rgb(var(--color-ruby-rgb) / 0.3); }
 
         .reveal-node { opacity: 0; transform: translate3d(0, 40px, 0); -webkit-transform: translate3d(0, 40px, 0); transition: opacity 1s cubic-bezier(0.16, 1, 0.3, 1), transform 1s cubic-bezier(0.16, 1, 0.3, 1); will-change: opacity, transform; }
         .reveal-node.active { opacity: 1; transform: translate3d(0,0,0); -webkit-transform: translate3d(0,0,0); }
@@ -168,13 +181,13 @@
         @media (min-width: 768px) { .editorial-quote { padding: 2.5rem 2rem; } .editorial-quote p { font-size: 1.25rem; } }
 
         @keyframes pulse-circle { 
-            0% { box-shadow: 0 0 0 0 rgba(var(--color-ruby-rgb), 0.5); } 
-            70% { box-shadow: 0 0 0 15px rgba(var(--color-ruby-rgb), 0); } 
-            100% { box-shadow: 0 0 0 0 rgba(var(--color-ruby-rgb), 0); } 
+            0% { box-shadow: 0 0 0 0 rgb(var(--color-ruby-rgb) / 0.5); } 
+            70% { box-shadow: 0 0 0 15px rgb(var(--color-ruby-rgb) / 0); } 
+            100% { box-shadow: 0 0 0 0 rgb(var(--color-ruby-rgb) / 0); } 
         }
 
         .media-player { position: relative; isolation: isolate; display: flex; align-items: center; justify-content: center; border-radius: var(--radius-media); overflow: hidden; border: 1px solid var(--card-border); background: var(--player-bg); transition: border-radius 0.6s ease, transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), border-color var(--anim-duration) ease; z-index: 1; transform-origin: center; transform: translate3d(0,0,0); -webkit-transform: translate3d(0,0,0); will-change: transform; cursor: pointer; }
-        .media-player.playing { z-index: 50; transform: translate3d(0, -6px, 0) scale(1.08); -webkit-transform: translate3d(0, -6px, 0) scale(1.08); border-color: rgb(var(--color-ruby-rgb)); box-shadow: 0 35px 70px rgba(0,0,0,0.9), 0 0 50px rgba(var(--color-ruby-rgb), 0.4); }
+        .media-player.playing { z-index: 50; transform: translate3d(0, -6px, 0) scale(1.08); -webkit-transform: translate3d(0, -6px, 0) scale(1.08); border-color: rgb(var(--color-ruby-rgb)); box-shadow: 0 35px 70px rgba(0,0,0,0.9), 0 0 50px rgb(var(--color-ruby-rgb) / 0.4); }
         @media (max-width: 767px) { .media-player.playing { transform: translate3d(0, -3px, 0) scale(1.05); -webkit-transform: translate3d(0, -3px, 0) scale(1.05); z-index: 50; } }
         
         .media-cell[data-orientation="square"] .media-player.playing:not(.is-fullscreen) { animation: pulse-circle 2s infinite; }
@@ -186,7 +199,7 @@
         .media-player.is-fullscreen {
             transform: translate3d(var(--tx, 0), var(--ty, 0), 0) scale(var(--scale, 2.5)) !important;
             -webkit-transform: translate3d(var(--tx, 0), var(--ty, 0), 0) scale(var(--scale, 2.5)) !important;
-            box-shadow: 0 0 50px 15px rgba(var(--color-ruby-rgb), 0.6), 0 0 150px rgba(0,0,0,0.9) !important;
+            box-shadow: 0 0 50px 15px rgb(var(--color-ruby-rgb) / 0.6), 0 0 150px rgba(0,0,0,0.9) !important;
             border: 3px solid rgb(var(--color-ruby-rgb)) !important;
         }
 
@@ -268,15 +281,15 @@
         .timeline-line { position: absolute; left: 8px; top: 0; bottom: -4rem; width: 2px; background: var(--timeline-line); transition: background-color var(--anim-duration); z-index: 0; }
         @media (min-width: 768px) { .timeline-line { left: 16px; bottom: -6rem; background: linear-gradient(to bottom, transparent, var(--timeline-line), transparent); } }
         
-        .timeline-dot { position: absolute; left: 8px; top: 2.5rem; transform: translate3d(-50%, 0, 0); -webkit-transform: translate3d(-50%, 0, 0); width: 12px; height: 12px; border-radius: 50%; background: rgb(var(--color-ruby-rgb)); border: 2px solid var(--bg-color); box-shadow: 0 0 0 3px rgba(var(--color-ruby-rgb), 0.1); z-index: 2; transition: all 0.5s, background-color var(--anim-duration), border-color var(--anim-duration), box-shadow var(--anim-duration); will-change: box-shadow, transform; }
-        @media (min-width: 768px) { .timeline-dot { left: 16px; top: 4rem; width: 16px; height: 16px; border-width: 4px; box-shadow: 0 0 0 4px rgba(var(--color-ruby-rgb), 0.1); } }
-        .timeline-item:hover .timeline-dot { transform: translate3d(-50%, 0, 0) scale(1.3); -webkit-transform: translate3d(-50%, 0, 0) scale(1.3); box-shadow: 0 0 0 6px rgba(var(--color-ruby-rgb), 0.2); }
-        .timeline-dot.glow { box-shadow: 0 0 15px 5px rgba(var(--color-ruby-rgb), 0.8) !important; background: #fff !important; transform: translate3d(-50%, 0, 0) scale(1.5) !important; -webkit-transform: translate3d(-50%, 0, 0) scale(1.5) !important; }
+        .timeline-dot { position: absolute; left: 8px; top: 2.5rem; transform: translate3d(-50%, 0, 0); -webkit-transform: translate3d(-50%, 0, 0); width: 12px; height: 12px; border-radius: 50%; background: rgb(var(--color-ruby-rgb)); border: 2px solid var(--bg-color); box-shadow: 0 0 0 3px rgb(var(--color-ruby-rgb) / 0.1); z-index: 2; transition: all 0.5s, background-color var(--anim-duration), border-color var(--anim-duration), box-shadow var(--anim-duration); will-change: box-shadow, transform; }
+        @media (min-width: 768px) { .timeline-dot { left: 16px; top: 4rem; width: 16px; height: 16px; border-width: 4px; box-shadow: 0 0 0 4px rgb(var(--color-ruby-rgb) / 0.1); } }
+        .timeline-item:hover .timeline-dot { transform: translate3d(-50%, 0, 0) scale(1.3); -webkit-transform: translate3d(-50%, 0, 0) scale(1.3); box-shadow: 0 0 0 6px rgb(var(--color-ruby-rgb) / 0.2); }
+        .timeline-dot.glow { box-shadow: 0 0 15px 5px rgb(var(--color-ruby-rgb) / 0.8) !important; background: #fff !important; transform: translate3d(-50%, 0, 0) scale(1.5) !important; -webkit-transform: translate3d(-50%, 0, 0) scale(1.5) !important; }
         
         #timeline-firefly {
             position: fixed; top: 50vh; width: 16px; height: 16px; border-radius: 50%;
             background: radial-gradient(circle, rgb(var(--color-ruby-rgb)) 0%, transparent 70%);
-            box-shadow: 0 0 20px 5px rgba(var(--color-ruby-rgb), 0.6);
+            box-shadow: 0 0 20px 5px rgb(var(--color-ruby-rgb) / 0.6);
             z-index: 5; pointer-events: none; opacity: 0; transition: opacity 0.5s;
             transform: translate3d(-50%, -50%, 0); -webkit-transform: translate3d(-50%, -50%, 0); left: 8px; will-change: opacity;
         }
@@ -335,8 +348,8 @@
         .color-option.active::after { content: '\f00c'; font-family: "Font Awesome 6 Free"; font-weight: 900; color: #fff; font-size: 0.8rem; text-shadow: 0 1px 2px rgba(0,0,0,0.3); }
 
         .style-card { border: 1px solid var(--card-border); background: var(--quote-bg); border-radius: 1rem; padding: 1rem; cursor: pointer; transition: background-color 0.3s, border-color 0.3s, box-shadow 0.3s; text-align: center; }
-        .style-card:hover { border-color: rgb(var(--color-ruby-rgb)); background: rgba(var(--color-ruby-rgb), 0.05); }
-        .style-card.active { border-color: rgb(var(--color-ruby-rgb)); background: rgba(var(--color-ruby-rgb), 0.1); box-shadow: 0 4px 15px rgba(var(--color-ruby-rgb), 0.15); }
+        .style-card:hover { border-color: rgb(var(--color-ruby-rgb)); background: rgb(var(--color-ruby-rgb) / 0.05); }
+        .style-card.active { border-color: rgb(var(--color-ruby-rgb)); background: rgb(var(--color-ruby-rgb) / 0.1); box-shadow: 0 4px 15px rgb(var(--color-ruby-rgb) / 0.15); }
         
         .settings-section-title { font-family: var(--font-sans), sans-serif; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-light); margin-bottom: 1rem; font-weight: 600; }
     </style>
@@ -346,7 +359,11 @@
     <div id="preloader"><div class="preloader-text">Бесконечность...</div></div>
     <div id="particles"></div>
     <div id="cursor-glow"></div>
-    <div id="scroll-progress"></div>
+    
+    <div id="scroll-progress-container">
+        <div id="scroll-progress-bar"></div>
+        <div id="scroll-progress-icon"></div>
+    </div>
     
     <div id="ambient-breathing-bg"></div>
     <div id="main-bg-image"></div>
@@ -433,7 +450,8 @@
                     <div class="settings-section-title">Размер текста</div>
                     <div class="flex items-center gap-4 px-2 bg-brand-gold/5 p-4 rounded-2xl border border-brand-gold/10">
                         <span class="text-brand-light text-sm">A</span>
-                        <input type="range" id="fontSizeSlider" min="90" max="115" value="100" class="w-full h-1 bg-brand-gold/30 rounded-lg appearance-none cursor-pointer accent-brand-ruby">
+                        <!-- ИСПРАВЛЕНИЕ: Убран класс appearance-none для корректной работы ползунка на iOS Safari -->
+                        <input type="range" id="fontSizeSlider" min="90" max="115" value="100" class="w-full h-1 bg-brand-gold/30 rounded-lg cursor-pointer accent-brand-ruby">
                         <span class="text-brand-light text-xl font-medium">A</span>
                     </div>
                 </div>
@@ -680,6 +698,10 @@
     </script>
 
     <script>
+        const timelineContainer = document.getElementById('timeline-content');
+        const tocLinksContainer = document.getElementById('toc-links');
+        const linkClass = "block p-4 md:p-5 rounded-2xl border border-brand-gold/10 bg-brand-gold/5 hover:border-brand-ruby/50 hover:bg-brand-ruby/10 transition-all duration-300 group text-center smooth-theme";
+
         function hidePreloader() {
             const pl = document.getElementById('preloader');
             if (pl) { pl.style.opacity = '0'; setTimeout(() => { pl.style.display = 'none'; }, 400); }
@@ -735,10 +757,10 @@
             root.style.setProperty('--anim-duration', siteSettings.animSpeed === 'fast' ? '0.6s' : '1.5s');
             root.setAttribute('data-layout', siteSettings.layoutCompact ? 'compact' : 'normal');
 
-            const pCont = document.getElementById('particles'); const cGlow = document.getElementById('cursor-glow'); const sProg = document.getElementById('scroll-progress');
+            const pCont = document.getElementById('particles'); const cGlow = document.getElementById('cursor-glow'); const sProg = document.getElementById('scroll-progress-container');
             if(pCont) pCont.style.opacity = siteSettings.particles ? '1' : '0';
             if(cGlow) cGlow.style.display = siteSettings.cursor ? 'block' : 'none';
-            if(sProg) sProg.style.display = siteSettings.scrollProgress ? 'block' : 'none';
+            if(sProg) sProg.style.opacity = siteSettings.scrollProgress ? '1' : '0';
 
             const controls = document.getElementById('controls-panel');
             if(controls) {
@@ -822,12 +844,10 @@
                 const target = document.getElementById(targetId); 
                 if (!target) return; 
 
-                // Важно: чтобы при скролле не прыгала страница из-за ленивой загрузки (lazy-load), 
-                // мы принудительно рендерим все блоки ДО нужной главы перед перемоткой.
                 const allItems = document.querySelectorAll('.timeline-item');
                 for (let item of allItems) {
                     if (item.compareDocumentPosition(target) & Node.DOCUMENT_POSITION_PRECEDING) {
-                        break; // Если элемент находится ПОСЛЕ целевого - останавливаемся
+                        break;
                     }
                     if (item.dataset.htmlContent) {
                         const wrapper = item.querySelector('.lazy-wrapper');
@@ -841,7 +861,6 @@
                     }
                 }
 
-                // Рендерим саму цель
                 if (target.dataset.htmlContent) {
                     const wrapper = target.querySelector('.lazy-wrapper');
                     if (wrapper) {
@@ -853,7 +872,6 @@
                     initVideoPlayers();
                 }
 
-                // Ждем долю секунды, чтобы браузер пересчитал высоту контента
                 setTimeout(() => {
                     const headerOffset = window.innerWidth < 768 ? 60 : 100;
                     const elementPosition = target.getBoundingClientRect().top;
@@ -861,11 +879,11 @@
                     
                     window.scrollTo({
                         top: offsetPosition,
-                        behavior: "smooth"
+                        behavior: "auto"
                     });
                 }, 50);
 
-            }, 300); // Ждем пока закроется окно оглавления
+            }, 300); 
         };
 
         const settingsDrawer = document.getElementById('settings-drawer'); const settingsOverlay = document.getElementById('settings-overlay');
@@ -1070,7 +1088,7 @@
             },
             {
                 date: "19 - 22 марта 2026", calcDate: "2026-03-19", season: "spring", title: "Заюня с чупачупсиком и Даня в зеркале 🍭", theme: "special-pink",
-                desc: "<p class='mb-4'>Столько эстетики, баловства и красоты! Даня красуется в зеркалах, а Лерочка просто невероятная с чупа-чупсиком.</p>", mediaGrid: [ { type: 'video', src: 'а теперь в футболке в зеркале 19 марта хахаха.mp4' }, { type: 'video', src: 'даня без футболки в зеркале 19 марта.mp4' }, { type: 'video', src: 'даня в бане в зеркале и в повязке на лбу 20 марта.mp4' }, { type: 'video', src: 'желание баловаться у дани 21 марта.mp4' }, { type: 'video', src: 'даня опять в бане без футболки 22 марта.mp4' }, { type: 'video', src: 'поспуньканая лерочка 22 марта.mp4' } ], extraDesc: "<hr class='border-brand-gold/20 my-6 md:my-8'><div class='text-center mb-6'><h3 class='text-3xl sm:text-4xl font-serif text-brand-ruby mb-2'>Заюня Леруня 💖</h3><p class='text-brand-light'>Сладкая девочка с чупа-чупсиком</p></div>", extraMedia: [ { type: 'video', src: 'заюня леруня с чупачупсиком 21 марта тоже выделить как то.mp4', full: true } ], masonryGallery: [ 'заюня леруня с чупачупсиком 21 марта только фото и тоже выделить как то.jpg', 'заюня леруня с чупачупсиком 21 марта только фото и тоже выделить как то 2.jpg', 'заюня леруня с чупачупсиком 21 марта только фото и тоже выделить как то 3.jpg' ], finalDesc: "<hr class='border-brand-gold/20 my-6 md:my-8'><div class='text-center mb-6'><h3 class='text-2xl font-serif text-brand-text mb-2'>Эстетика 22 марта 📸</h3><p class='text-brand-light'>Красавчик Даня в зеркале</p></div>", finalMediaGrid: [ { type: 'video', src: 'Даня в зеркале 22 марта как то выделить).mp4', full: true } ], postMediaGrid: [ { type: 'img', src: 'Даня в зеркале 22 марта как то выделить.jpg' }, { type: 'img', src: 'Даня в зеркале 22 марта как то выделить 2.jpg' }, { type: 'img', src: 'Даня в зеркале 22 марта как то выделить 3.jpg' }, { type: 'img', src: 'Даня в зеркале 22 марта как то выделить 4.jpg' }, { type: 'img', src: 'Даня в зеркале 22 марта как то выделить 5.jpg' } ]
+                desc: "<p class='mb-4'>Столько эстетики, баловства и красоты! Даня красуется в зеркалах, а Лерочка просто невероятная с чупа-чупсиком.</p>", mediaGrid: [ { type: 'video', src: 'а теперь в футболке в зеркале 19 марта хахаха.mp4' }, { type: 'video', src: 'даня без футболки в зеркале 19 марта.mp4' }, { type: 'video', src: 'даня в бане в зеркале и в повязке на лбу 20 марта.mp4' }, { type: 'video', src: 'желание баловаться у дани 21 марта.mp4' }, { type: 'video', src: 'даня опять в бане без футболки 22 марта.mp4' }, { type: 'video', src: 'поспуньканая лерочка 22 марта.mp4' } ], extraDesc: "<hr class='border-brand-gold/20 my-6 md:my-8'><div class='text-center mb-6'><h3 class='text-3xl sm:text-4xl font-serif text-brand-ruby mb-2'>Заюня Леруня 💖</h3><p class='text-brand-light'>Сладкая девочка с чупа-чупсиком</p></div>", extraMedia: [ { type: 'video', src: 'заюня леруня с чупачупсиком 21 марта тоже выделить как то.mp4', full: true } ], masonryGallery: [ 'заюня леруня с чупачупсиком 21 марта только фото и тоже выделить как то.jpg', 'заюня леруня с чупачупсиком 21 марта только фото и тоже выделить как то 2.jpg', 'заюня леруня с чупачупсиком 21 марта только фото и тоже выделить как то 3.jpg' ], finalDesc: "<hr class='border-brand-gold/20 my-6 md:my-8'><div class='text-center mb-6'><h3 class='text-2xl font-serif text-brand-text mb-2'>Эстетика 22 марта 📸</h3><p class='text-brand-light'>Красавчик Даня в зеркале</p></div>", finalMediaGrid: [ { type: 'video', src: 'Даня в зеркале 22 марта как то выделить).mp4', full: true } ], postMediaGrid: [ { type: 'img', src: 'Даня в зеркале 22 марта как то выделить.jpg' }, { type: 'img', src: 'Даня в зеркале 22 марта как то выделить 2.jpg' }, { type: 'img', src: 'Даня в зеркале 22 марта как то выделить 3.jpg' }, { type: 'img', src: 'Даня в зеркале 22 марта как то выделить 4.jpg' }, { type: 'img', src: 'Даня in mirror 22 марта как то выделить 5.jpg' } ]
             },
             {
                 date: "23 - 26 марта 2026", calcDate: "2026-03-23", season: "spring", title: "Ангельская улыбка и много радости 👼",
@@ -1142,7 +1160,7 @@
             },
             {
                 date: "21 - 24 мая 2026", calcDate: "2026-05-21", season: "spring", title: "Службы, подрясник и красота ✨", theme: "special-gold",
-                desc: "<p class='mb-4'>Даня почти всю неделю на службах в Киеве перед отъездом, появление своего собственного подрясника и прекрасное личико Лерочки.</p>", mediaGrid: [ { type: 'video', src: '22 мая лерочка в зеркале).mp4' }, { type: 'video', src: 'прекрасное личико лерочки вечером 23 мая.mp4' }, { type: 'video', src: 'даня с муркой 23 мая.mp4' }, { type: 'video', src: 'спустя 10 дней даня в своем подряснике)) 24 мая.mp4' }, { type: 'video', src: 'Лерочка на дне рождения у амины.mp4' } ], masonryGallery: [ 'Даня почти всю неделю на службах в храме в киеве перед уездом домой на лето 21 мая 5 литургий подряд 2.jpg', 'Даня почти всю неделю на службах в храме в киеве перед уездом домой на лето 21 мая 5 литургий подряд 3.jpg', 'Даня почти всю неделю на службах в храме в киеве перед уездом домой на лето 21 мая 5 литургий подряд.jpg', 'даня с илюшкой в подрясниках 24 мая)).jpg', 'Даня с пономарями в подрясниках 24 мая фоточки.jpg', 'Даня с пономарями в подрясниках 24 мая фоточки2.jpg', 'Даня с пономарями в подрясниках 24 мая фоточки3.jpg', 'Даня с пономарями в подрясниках 24 мая фоточки4.jpg', 'Даня с пономарями и с Отцом Анатолием 24 мая фоточки.jpg', 'Даня с пономарями и с Отцом Анатолием 24 мая фоточки2.jpg', 'Даня с дочкой пономаря Леши.jpg' ]
+                desc: "<p class='mb-4'>Даня почти всю неделю на службах в Киеве перед отъездом, появление своего собственного подрясника и прекрасное личико Лерочки.</p>", mediaGrid: [ { type: 'video', src: '22 мая лерочка в зеркале).mp4' }, { type: 'video', src: 'прекрасное личико лерочки вечером 23 мая.mp4' }, { type: 'video', src: 'даня с муркой 23 мая.mp4' }, { type: 'video', src: 'спустя 10 дней даня в своем подряснике)) 24 мая.mp4' }, { type: 'video', src: 'Лерочка на дне рождения у амины.mp4' } ], masonryGallery: [ 'Даня почти всю неделю на службах в храме в киеве перед уездом домой на лето 21 мая 5 литургий подряд 2.jpg', 'Даня почти всю неделю на службах в храме в киеве перед уездом домой на лето 21 мая 5 литургий подряд 3.jpg', 'Даня почти всю неделю на службах в храме в киеве перед уездом домой на лето 21 мая 5 литургий подряд.jpg', 'даня с илюшкой в подрясниках 24 мая)).jpg', 'Даня с пономарями в подрясниках 24 мая фоточки.jpg', 'Даня с пономарями в подрясниках 24 мая фоточки2.jpg', 'Даня с пономарями в подрясниках 24 мая фоточки3.jpg', 'Даня с пономарями in surplices 24 мая фоточки4.jpg', 'Даня с пономарями и с Отцом Анатолием 24 мая фоточки.jpg', 'Даня с пономарями и с Отцом Анатолием 24 мая фоточки2.jpg', 'Даня с дочкой пономаря Леши.jpg' ]
             },
             {
                 date: "25 - 29 мая 2026", calcDate: "2026-05-25", season: "spring", title: "Поездка в Черкассы и уютные вечера 🌸",
@@ -1158,26 +1176,29 @@
                 desc: "<p class='mb-4'>Встретили лето вместе прямо в келии монастыря! Чудесные летние вечера, освящение машины и нежность.</p>", media: [ { type: 'video', src: '1 июня уже вместе в келии и вместе встретили наше первое лето и впервые вместе в матроне выделить этот кружочек.mp4', full: true } ], extraMediaGrid: [ { type: 'video', src: '2 июня дома даня).mp4' }, { type: 'video', src: 'Девочка с красивыми волосами 2 июня.mp4' }, { type: 'video', src: 'чудесная девочка вечером) 2 июня.mp4' }, { type: 'video', src: 'Макияж лерочки) 5 июня.mp4' }, { type: 'video', src: 'шладкая шладость 5 июня.mp4' } ], masonryGallery: [ 'освящение машины 7 июня.jpg', 'освящение машины 7 июня 2.jpg', 'освящение машины 7 июня 3.jpg', 'освящение машины 7 июня 4.jpg' ], finalDesc: "<hr class='border-brand-gold/20 my-6 md:my-8'><p class='mb-4 text-brand-text smooth-theme'>Летние вечера, курсы и сонные милашки ✨</p>", finalMediaGrid: [ { type: 'video', src: 'лерочка проснулась в общаге Лерочка на курсах перед поступлением 8 июня.mp4' }, { type: 'video', src: 'Сонная лерочка 9 июня.mp4' }, { type: 'video', src: 'Вечером после душа) 9 июня.mp4' }, { type: 'video', src: 'Вечером после душа) 9 июня 2.mp4' }, { type: 'video', src: 'даня после бани 11 июня.mp4' }, { type: 'video', src: 'чудесная улыбка 11 июня.mp4' }, { type: 'video', src: 'закат 11 июня.mp4' }, { type: 'video', src: 'Сонная лерочка 16 июня.mp4' }, { type: 'video', src: 'леруня собирается на пары 16 июня.mp4' }, { type: 'video', src: 'прекрасность) 16 июня.mp4' } ]
             },
             {
-                chapter: "Глава 9: День рождения Лерочки", chapterDesc: "Самый важный праздник этого лета.",
-                date: "15 июля 2026", calcDate: "2026-07-15", season: "summer", title: "Доступ закрыт до 15 июля 🔒", isLocked: true, 
-                lockedQuestion: "Пароль от этой главы мы установим чуть позже, ближе к празднику. Пока что она ждет своего времени! (Для проверки пароль сейчас: парк)", lockedAnswer: "парк",
-                hiddenContent: { title: "С Днем Рождения, любимая! 🎂", desc: "Здесь будет твое большое, красиво оформленное поздравление! Сюда мы добавим тексты, видео и фото.", media: [] }
+                chapter: "Глава 9: День Рождения Данечки", chapterDesc: "Особенный день, когда на свет появился мой любимый человек.",
+                date: "17 июня 2026", calcDate: "2026-06-17", season: "summer", heartbeat: true, title: "С Днем Рождения, любимый! 🎉", theme: "special-gold",
+                desc: `<div class="editorial-quote my-6 md:my-8"><p class="text-brand-text font-serif italic text-lg md:text-xl leading-relaxed">С Днем рождения мой любимый! 💗 Я очень рада что встречаю твой день с тобой. Хочу тебе пожелать, чтобы ты всегда всегда был счастлив, в любой ситуации мог находить что-то хорошее! 😽 Чтобы все твои идеи, даже те которые появляются из временного вдохновения, всегда получались, если они нужны. 📚Я очень хочу чтобы ты своей чудесной душой держал возле себя чудесных людей,  которые будут как родные! Пусть в твоем уме будут только ясные мысли, невероятные идеи, и главное желание идти только вперед! Мне очень приятно то что тебя уже наградили подрясником, желаю чтобы Господь на всем твоем жизненном пути давал тебе любые награды, которые будут действовать на возрастания твоего внутреннего мира! 😇 Всегда помни что я горжусь тобой, и что все что ты делаешь, для меня есть самое лучшее! Поздравляю тебя, с твоим днем мой хороший) ☺️😘🥰</p></div>
+                <div class="flex justify-center my-8 md:my-12"><img src="sticker.webp" alt="Стикер" class="w-48 md:w-64 drop-shadow-2xl animate-float" style="object-fit: contain;"></div>
+                <div class="text-center my-8 md:my-12"><p class="font-sans text-brand-text text-xl mb-6 smooth-theme">)))</p><h3 class="font-serif text-3xl sm:text-4xl md:text-5xl text-brand-ruby mb-6 smooth-theme font-bold animate-pulse drop-shadow-md">С ДНЕМ РОЖДЕНИЯЯЯЯЯЯ</h3></div>`,
+                media: [ { type: 'video', src: 'Пианино.MOV', full: true } ],
+                extraDesc: `<div class="text-center mt-12 mb-8"><h3 class="font-serif text-3xl sm:text-4xl md:text-6xl text-brand-gold mb-4 smooth-theme drop-shadow-xl" style="text-shadow: 0 0 30px rgba(212, 184, 143, 0.5);">ЛЮБОВЬ МОЯЯЯЯЯЯЯЯ</h3></div>`,
+                extraMedia: [ { type: 'video', src: 'видосик поздравления.MOV', full: true } ]
             }
         ];
 
-        const tocLinksContainer = document.getElementById('toc-links');
-        const linkClass = "block p-4 md:p-5 rounded-2xl border border-brand-gold/10 bg-brand-gold/5 hover:border-brand-ruby/50 hover:bg-brand-ruby/10 transition-all duration-300 group text-center smooth-theme";
-        
-        tocLinksContainer.innerHTML = `
-            <a href="#special-dates" class="${linkClass}" onclick="handleTocClick(event, 'special-dates')">
-                <div class="text-[10px] font-sans text-brand-light uppercase tracking-widest mb-1 md:mb-2 group-hover:text-brand-ruby smooth-theme">Созвездие</div>
-                <div class="font-serif text-lg md:text-xl text-brand-text group-hover:text-brand-ruby smooth-theme">Наших Дат</div>
-            </a>
-            <a href="#meetings" class="${linkClass}" onclick="handleTocClick(event, 'meetings')">
-                <div class="text-[10px] font-sans text-brand-light uppercase tracking-widest mb-1 md:mb-2 group-hover:text-brand-ruby smooth-theme">Журнал</div>
-                <div class="font-serif text-lg md:text-xl text-brand-text group-hover:text-brand-ruby smooth-theme">Наши Встречи</div>
-            </a>
-        `;
+        if (tocLinksContainer) {
+            tocLinksContainer.innerHTML = `
+                <a href="#special-dates" class="${linkClass}" onclick="handleTocClick(event, 'special-dates')">
+                    <div class="text-[10px] font-sans text-brand-light uppercase tracking-widest mb-1 md:mb-2 group-hover:text-brand-ruby smooth-theme">Созвездие</div>
+                    <div class="font-serif text-lg md:text-xl text-brand-text group-hover:text-brand-ruby smooth-theme">Наших Дат</div>
+                </a>
+                <a href="#meetings" class="${linkClass}" onclick="handleTocClick(event, 'meetings')">
+                    <div class="text-[10px] font-sans text-brand-light uppercase tracking-widest mb-1 md:mb-2 group-hover:text-brand-ruby smooth-theme">Журнал</div>
+                    <div class="font-serif text-lg md:text-xl text-brand-text group-hover:text-brand-ruby smooth-theme">Наши Встречи</div>
+                </a>
+            `;
+        }
 
         const meetingsList = [
             { date: "6 сентября 2025", loc: "Дендропарк г. Кропивницкий" }, { date: "8 сентября 2025", loc: "Храм в Байраках служба" },
@@ -1200,7 +1221,8 @@
             if(container) {
                 container.innerHTML = '';
                 const allMeetings = [...meetingsList, ...(window.firebaseMeetings || [])];
-                document.getElementById('meetings-count').innerText = allMeetings.length;
+                const countEl = document.getElementById('meetings-count');
+                if (countEl) countEl.innerText = allMeetings.length;
                 
                 allMeetings.forEach((meeting, i) => {
                     const isLast = i === allMeetings.length - 1;
@@ -1258,22 +1280,7 @@
             return html + `</div>`;
         }
 
-        const timelineContainer = document.getElementById('timeline-content');
         let heartsFound = 0; const totalHearts = 3; const heartLocations = [1, 6, 15];
-
-        window.unlockChapter = function(index) {
-            const block = memories[index];
-            const input = document.getElementById(`pwd-input-${index}`); const errorMsg = document.getElementById(`pwd-error-${index}`);
-            const val = input.value.trim().toLowerCase();
-            if (val === block.lockedAnswer) {
-                const cardInner = document.getElementById(`card-inner-${index}`);
-                cardInner.style.opacity = '0';
-                setTimeout(() => {
-                    cardInner.innerHTML = `<div class="text-[11px] md:text-[14px] font-sans font-medium tracking-widest uppercase mb-2 md:mb-3 text-brand-ruby smooth-theme">${block.date}</div><h3 class="font-serif text-2xl md:text-4xl text-brand-text mb-4 md:mb-6 smooth-theme">${block.hiddenContent.title}</h3><div class="text-brand-text font-sans font-light leading-relaxed text-sm md:text-lg smooth-theme">${block.hiddenContent.desc}</div>${block.hiddenContent.media ? renderMediaGrid(block.hiddenContent.media) : ''}`;
-                    cardInner.style.opacity = '1'; initImageFrames(cardInner); initVideoPlayers();
-                }, 500);
-            } else { errorMsg.classList.remove('hidden'); input.classList.add('border-brand-ruby'); }
-        };
 
         if(timelineContainer) {
             memories.forEach((block, index) => {
@@ -1508,18 +1515,44 @@
         setInterval(updateTimers, 1000); updateTimers();
 
         let isScrolling = false;
-        window.addEventListener('scroll', () => {
+        let scrollAF = null;
+        
+        function onScroll() {
             if (!isScrolling) {
-                window.requestAnimationFrame(() => {
-                    const h = document.documentElement; const st = h.scrollTop || document.body.scrollTop; const sh = h.scrollHeight || document.body.scrollHeight; const scrollable = sh - h.clientHeight;
-                    const pct = scrollable > 0 ? (st / scrollable) * 100 : 0;
-                    const scrollProg = document.getElementById('scroll-progress'); if (scrollProg) scrollProg.style.width = pct + '%';
-                    if (siteSettings.scrollProgress) { const firefly = document.getElementById('timeline-firefly'); if (firefly) { firefly.style.opacity = (st > window.innerHeight * 0.5) ? '1' : '0'; } }
+                scrollAF = window.requestAnimationFrame(() => {
+                    const h = document.documentElement;
+                    const st = h.scrollTop || document.body.scrollTop;
+                    const sh = h.scrollHeight || document.body.scrollHeight;
+                    const scrollable = sh - h.clientHeight;
+                    
+                    let pct = scrollable > 0 ? st / scrollable : 0;
+                    pct = Math.max(0, Math.min(1, pct));
+                    
+                    const bar = document.getElementById('scroll-progress-bar');
+                    const icon = document.getElementById('scroll-progress-icon');
+                    
+                    if (bar) {
+                        bar.style.transform = `scaleX(${pct})`;
+                    }
+                    if (icon) {
+                        const maxScrollWidth = h.clientWidth;
+                        // ИСПРАВЛЕНИЕ: Вычитаем ширину иконки (30px), чтобы она не вылезала за правый край экрана
+                        icon.style.transform = `translate3d(${pct * (maxScrollWidth - 30)}px, 0, 0)`;
+                    }
+
+                    if (siteSettings.scrollProgress) {
+                        const firefly = document.getElementById('timeline-firefly');
+                        if (firefly) {
+                            firefly.style.opacity = (st > window.innerHeight * 0.5) ? '1' : '0';
+                        }
+                    }
                     isScrolling = false;
                 });
                 isScrolling = true;
             }
-        }, { passive: true });
+        }
+        
+        window.addEventListener('scroll', onScroll, { passive: true });
 
         window.addEventListener('DOMContentLoaded', () => { 
             loadSettings(); 
