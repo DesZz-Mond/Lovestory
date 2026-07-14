@@ -1392,6 +1392,12 @@
                     '13 июля)) с цуценям Выделить фотку и подписать с цуценям).jpg',
                     'у дедули) 13 июля)) с цуценям.jpg'
                 ]
+            },
+            {
+                chapter: "Глава 11: День Рождения Лерочки", chapterDesc: "Особенный день, когда на свет появилась моя вселенная.",
+                date: "15 июля 2026", calcDate: "2026-07-15", season: "summer", heartbeat: true, title: "С Днем Рождения, любимая! 🎉", theme: "special-pink",
+                desc: `<div class="editorial-quote my-6 md:my-8"><p class="text-brand-text font-serif italic text-lg md:text-xl leading-relaxed text-left" style="text-align: left;">Моя невероятно нежная и самая любимая Лерочка) 🌸✨<br><br>Сегодня совершенно особенный день — твой день рождения.<br>И для меня он волшебен вдвойне, ведь это первый твой праздник, который мы встречаем вместе. 🥹❤️<br><br>Я так долго ждал этого момента, чтобы обнять тебя крепко-крепко и сказать, как сильно я счастлив быть с тобой.<br>Ты появилась в моей жизни и раскрасила её самыми теплыми и яркими цветами🎨🌅<br>С тобой каждый мой день наполнен светом, уютом и невероятной нежностью — я не устаю восхищаться твоей красотой, твоей доброй душой и той чудесной улыбкой, от которой у меня каждый раз замирает сердце. 🦋💖<br>Моя родная, я хочу пожелать тебе самого искреннего и безграничного счастья))<br>Пусть твои глазки всегда сияют, как самые яркие звёздочки ✨ а в душе круглый год цветёт весна 🌷))  наша любимая)))<br>Пусть все твои самые сокровенные мечты сбываются легко и красиво, словно по волшебству. 🪄<br><br>Ты выбрала для себя такой невероятно сложный, но самый важный и благородный путь — путь врача 🤍 <br>Я безумно горжусь тобой, твоей целеустремленностью и твоим огромным добрым сердцем, которое стремится помогать другим ✨ <br>Пусть эта профессия приносит тебе море вдохновения, а любые трудности сдаются перед твоим упорством по молитвам нашего любимого святого Луки Крымского)<br><br>А я обещаю всегда быть твоей надежной стеной и самой верной опорой — я буду рядом, чтобы греть тебя, поддерживать любые твои идеи, заботиться о тебе и любить так сильно, как только возможно🫂🥰 <br>Я сделаю всё, чтобы ты чувствовала себя самой желанной и защищенной девочкой на свете. 👑<br>Пусть этот день рождения станет началом нашей долгой-долгой сказки, и пусть впереди нас ждет еще море таких же счастливых праздников, которые мы обязательно разделим на двоих. 🥂💕<br><br>С днем рождения, моя вселенная! Я тебя безумно люблю! ❤️</p></div>`,
+                postDesc: "<div class='text-center mt-8 mb-4'><p class='text-brand-light font-sans text-sm md:text-base font-medium italic smooth-theme'>(Скоро здесь будут фоточки со дня рождения... 📸✨)</p></div>"
             }
         ];
 
@@ -1446,19 +1452,18 @@
             entries.forEach(entry => { if (entry.isIntersecting) { entry.target.classList.add('ken-burns-active'); } else { entry.target.classList.remove('ken-burns-active'); } });
         }, { threshold: 0.1 });
 
-        // НОВЫЙ OBSERVER: Настоящий Lazy Load для картинок
         const lazyImageObserver = new IntersectionObserver((entries, observer) => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
                     const img = entry.target;
                     if (img.dataset.src) {
-                        img.src = img.dataset.src; // Триггер загрузки картинки из сети
+                        img.src = img.dataset.src;
                         img.removeAttribute('data-src');
                     }
-                    observer.unobserve(img); // Больше не следим за ней для загрузки
+                    observer.unobserve(img); 
                 }
             });
-        }, { rootMargin: '400px 0px' }); // Загружаем картинки за 400px до того, как до них доскроллят
+        }, { rootMargin: '400px 0px' });
 
         function setMediaOrientation(mediaEl) {
             const cell = mediaEl.closest('.media-cell'); const container = mediaEl.closest('[data-aspect-container]');
@@ -1477,7 +1482,7 @@
             scope.querySelectorAll('img.photo-hover').forEach(img => {
                 kenBurnsObserver.observe(img); 
                 if (img.classList.contains('lazy-image')) {
-                    lazyImageObserver.observe(img); // Следим за lazy load
+                    lazyImageObserver.observe(img);
                 }
                 
                 if (img.dataset.frameReady) return;
@@ -1485,14 +1490,12 @@
                 const container = img.closest('[data-aspect-container]');
                 
                 const handleLoad = () => { 
-                    // Показываем контейнер только если это НАСТОЯЩАЯ картинка, а не SVG-заглушка
                     if (img.src && !img.src.startsWith('data:image')) {
                         if (container) container.classList.remove('opacity-0'); 
                         setMediaOrientation(img); 
                     }
                 };
                 
-                // ИСПРАВЛЕНО: Всегда вешаем слушатель события load, так как data-src потом изменит src
                 img.addEventListener('load', handleLoad);
                 img.addEventListener('error', () => { if (container) container.classList.remove('opacity-0'); });
                 
@@ -1500,13 +1503,11 @@
             });
         }
 
-        // ОБНОВЛЕННЫЙ renderMedia: Используем data-src и прозрачный пиксель (SVG) как заглушку
         function renderMedia(item) {
             const placeholder = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'%3E%3C/svg%3E";
             if (item.type === 'img') {
                 return `<div class="flex flex-col gap-3 h-full items-center w-full"><div class="photo-container group relative w-full opacity-0 transition-opacity duration-700" data-aspect-container><img src="${placeholder}" data-src="${item.src}" alt="Memory" loading="lazy" decoding="async" class="photo-hover lazy-image w-full h-full object-cover"></div>${item.subtitle ? `<div class="text-brand-text/90 font-sans text-xs md:text-sm font-medium text-center px-1 smooth-theme">${item.subtitle}</div>` : ''}</div>`;
             } else if (item.type === 'video') {
-                // preload="none" - КРИТИЧЕСКИ ВАЖНО для видео, иначе они убивают всю скорость
                 return `<div class="flex flex-col gap-3 h-full items-center w-full"><div class="media-player group w-full relative opacity-0 transition-opacity duration-700" data-aspect-container data-src="${item.src}"><div class="vignette"></div><div class="loader-ring"></div><video class="w-full h-full object-cover block pointer-events-none" playsinline webkit-playsinline preload="none" style="border-radius: inherit;"></video><div class="player-ui-rect w-full h-full absolute inset-0 z-10 flex flex-col justify-end pointer-events-none" style="border-radius: inherit; display: none;"><div class="progress-wrapper px-3 md:px-4 pointer-events-auto"><div class="progress-bar-container"><div class="progress-bar-fill"></div></div></div></div><div class="player-ui-circle w-full h-full absolute inset-0 z-10 flex items-center justify-center pointer-events-none" style="border-radius: inherit; display: none;"><svg class="absolute inset-0 w-full h-full -rotate-90 pointer-events-none" viewBox="0 0 100 100" style="overflow: visible;"><circle cx="50" cy="50" r="49" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="1"></circle><circle class="circular-progress-fill" cx="50" cy="50" r="49" fill="none" stroke="rgb(var(--color-ruby-rgb))" stroke-width="1.5" stroke-dasharray="307.87" stroke-dashoffset="307.87" stroke-linecap="round"></circle></svg></div></div>${item.subtitle ? `<div class="text-brand-text/90 font-sans text-xs md:text-sm font-medium text-center px-1 smooth-theme">${item.subtitle}</div>` : ''}</div>`;
             } return '';
         }
@@ -1562,7 +1563,6 @@
                     if (block.poem2) innerHtml += `<div class="editorial-quote"><p>${block.poem2}</p></div>`;
                     if (block.masonryGallery) {
                         innerHtml += `<div class="masonry-gallery columns-1 sm:columns-2 lg:columns-3 gap-2 sm:gap-3 md:gap-4 my-6 md:my-8 space-y-2 sm:space-y-3 md:space-y-4">`;
-                        // ОБНОВЛЕННЫЙ masonryGallery с data-src
                         block.masonryGallery.forEach(imgSrc => { 
                             const placeholder = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'%3E%3C/svg%3E";
                             innerHtml += `<div class="photo-container break-inside-avoid w-full"><img src="${placeholder}" data-src="${imgSrc}" class="w-full block photo-hover lazy-image" loading="lazy"></div>`; 
@@ -1597,7 +1597,6 @@
             });
         }
 
-        // ОБНОВЛЕНО: margin уменьшен с 3000px до 600px
         const domObserver = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
                 if (entry.isIntersecting && entry.target.dataset.htmlContent) {
@@ -1659,12 +1658,10 @@
                     if (isPlaying) rafId = requestAnimationFrame(updateProgress);
                 };
 
-                // ОБНОВЛЕНО: margin уменьшен с 1000px до 300px
                 const vObs = new IntersectionObserver((entries) => {
                     entries.forEach(entry => {
                         if (entry.isIntersecting) { 
                             if (!video.src) { video.src = wrapper.getAttribute('data-src'); video.load(); } 
-                            // Загружаем метаданные, только когда видео близко к экрану
                             if (video.preload === 'none') { video.preload = 'metadata'; }
                         } 
                         else { 
