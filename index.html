@@ -351,6 +351,9 @@
         .style-card:hover { border-color: rgb(var(--color-ruby-rgb)); background: rgb(var(--color-ruby-rgb) / 0.05); }
         .style-card.active { border-color: rgb(var(--color-ruby-rgb)); background: rgb(var(--color-ruby-rgb) / 0.1); box-shadow: 0 4px 15px rgb(var(--color-ruby-rgb) / 0.15); }
         
+        #chapter-launcher.hidden { display: none; }
+        .chapter-nav-btn { min-height: 48px; font-family: var(--font-sans), sans-serif; font-size: 0.85rem; letter-spacing: 0.02em; }
+        #timeline:empty { min-height: 0; padding-top: 0; padding-bottom: 0; }
         .settings-section-title { font-family: var(--font-sans), sans-serif; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-light); margin-bottom: 1rem; font-weight: 600; }
     </style>
 </head>
@@ -609,6 +612,21 @@
                 </div>
                 <div class="max-h-[400px] md:max-h-[500px] overflow-y-auto pr-2 md:pr-4 meetings-scroll flex flex-col-reverse" id="meetings-list-container"></div>
             </div>
+        </div>
+    </section>
+
+    <section id="chapter-launcher" class="py-8 md:py-12 px-4 relative z-10 smooth-theme">
+        <div class="max-w-3xl mx-auto text-center reveal-node">
+            <div class="w-12 h-[1px] bg-brand-gold/40 mx-auto mb-6"></div>
+            <p class="font-sans text-[10px] md:text-xs uppercase tracking-[0.25em] text-brand-light mb-3">Продолжение нашей истории</p>
+            <h2 class="font-serif text-2xl md:text-3xl text-brand-text mb-6">Перейти к первой главе</h2>
+            <button id="start-chapter-btn" type="button"
+                class="inline-flex items-center justify-center gap-3 bg-brand-ruby hover:bg-brand-ruby/80 text-white px-8 py-4 shadow-lg shadow-brand-ruby/20 transition-all duration-300 hover:-translate-y-1"
+                style="border-radius: var(--radius-btn);">
+                <i class="fas fa-book-open"></i>
+                <span>Начать историю</span>
+                <i class="fas fa-arrow-down text-sm"></i>
+            </button>
         </div>
     </section>
 
@@ -1463,7 +1481,7 @@
                     observer.unobserve(img); 
                 }
             });
-        }, { rootMargin: '400px 0px' });
+        }, { rootMargin: '120px 0px' });
 
         function setMediaOrientation(mediaEl) {
             const cell = mediaEl.closest('.media-cell'); const container = mediaEl.closest('[data-aspect-container]');
@@ -1522,90 +1540,330 @@
             return html + `</div>`;
         }
 
+        /*
+         * ГЛАВЫ: в DOM одновременно находится только одна глава.
+         * При переходе старая глава полностью удаляется вместе с её video/img DOM-узлами.
+         * Это снижает потребление памяти и не заставляет браузер держать всю историю на странице.
+         */
         let heartsFound = 0; const totalHearts = 3; const heartLocations = [1, 6, 15];
+        let currentChapterIndex = -1;
 
-        if(timelineContainer) {
-            memories.forEach((block, index) => {
-                if (block.chapter) {
-                    const chapterId = `chapter-${index}`;
-                    timelineContainer.insertAdjacentHTML('beforeend', `<div id="${chapterId}" class="w-full text-center py-16 md:py-20 reveal-node relative mt-6 md:mt-10 mb-6 md:mb-10 col-span-full smooth-theme" style="scroll-margin-top: 4rem;"><h2 class="font-serif text-3xl sm:text-4xl md:text-6xl text-brand-ruby mb-3 md:mb-4 relative z-10 smooth-theme">${block.chapter}</h2><p class="text-brand-light font-sans text-sm md:text-base font-light italic max-w-md mx-auto relative z-10 px-4 smooth-theme">${block.chapterDesc}</p></div>`);
-                    let shortChapterTitle = block.chapter.split(':')[0]; let chapterName = block.chapter.split(':')[1] || '';
-                    
-                    tocLinksContainer.insertAdjacentHTML('beforeend', `<a href="#${chapterId}" class="${linkClass}" onclick="handleTocClick(event, '${chapterId}')"><div class="text-[10px] font-sans text-brand-light uppercase tracking-widest mb-1 md:mb-2 group-hover:text-brand-ruby smooth-theme">${shortChapterTitle}</div><div class="font-serif text-lg md:text-xl text-brand-text group-hover:text-brand-ruby transition-colors leading-tight smooth-theme">${chapterName.trim()}</div></a>`);
+        const chapterGroups = [];
+        let activeChapter = null;
+
+        memories.forEach((block, index) => {
+            if (block.chapter) {
+                activeChapter = {
+                    index: chapterGroups.length,
+                    id: `chapter-${index}`,
+                    title: block.chapter,
+                    desc: block.chapterDesc || '',
+                    start: index,
+                    blocks: []
+                };
+                chapterGroups.push(activeChapter);
+            }
+            if (activeChapter) activeChapter.blocks.push({ block, sourceIndex: index });
+        });
+
+        function getChapterTitleParts(chapter) {
+            const parts = chapter.title.split(':');
+            return {
+                eyebrow: parts[0] || chapter.title,
+                name: (parts.slice(1).join(':') || '').trim()
+            };
+        }
+
+        function cleanupTimelineResources() {
+            const timeline = document.getElementById('timeline');
+            if (!timeline) return;
+
+            timeline.querySelectorAll('video').forEach(video => {
+                try { video.pause(); } catch (e) {}
+                try {
+                    video.removeAttribute('src');
+                    video.load();
+                } catch (e) {}
+            });
+
+            // Удаляем все старые DOM-узлы главы. После этого GC браузера
+            // может освободить связанные с ними объекты.
+            timeline.innerHTML = '';
+        }
+
+        function buildChapterBlock(block, sourceIndex) {
+            let cardClasses = 'glass-card w-full relative overflow-hidden p-6 sm:p-8 md:p-10 ';
+            let badgeStyle = 'color: rgb(var(--color-ruby-rgb));';
+
+            if (block.theme === 'special-pink') {
+                cardClasses += 'card-theme-pink ';
+            } else if (block.theme === 'special-blue') {
+                cardClasses += 'card-theme-blue '; badgeStyle = 'color: #60a5fa;';
+            } else if (block.theme === 'special-gold') {
+                cardClasses += 'card-theme-gold '; badgeStyle = 'color: rgb(var(--color-gold-rgb));';
+            } else if (block.theme === 'purple') {
+                cardClasses += 'card-theme-purple '; badgeStyle = 'color: #c084fc;';
+            }
+
+            let innerHtml = `<div id="card-inner-${sourceIndex}" class="transition-opacity duration-500">`;
+
+            if (block.isLocked) {
+                innerHtml += `<div class="text-center py-4 md:py-6">
+                    <i class="fas fa-lock text-3xl md:text-4xl text-brand-gold mb-4 md:mb-6 smooth-theme"></i>
+                    <h3 class="font-serif text-2xl md:text-4xl text-brand-text mb-3 md:mb-4 smooth-theme">${block.title}</h3>
+                    <p class="text-brand-light font-sans text-sm md:text-base font-light mb-6 md:mb-8 max-w-md mx-auto smooth-theme">${block.lockedQuestion}</p>
+                    <div class="flex flex-col sm:flex-row gap-3 w-full max-w-sm mx-auto">
+                        <input type="text" id="pwd-input-${sourceIndex}" class="flex-1 bg-brand-bg/50 border border-brand-gold/30 rounded-xl px-4 py-3 text-brand-text outline-none focus:border-brand-ruby transition-colors font-sans" placeholder="Ваш ответ...">
+                        <button onclick="unlockChapter(${sourceIndex})" class="bg-brand-ruby hover:bg-brand-ruby/80 text-white px-6 py-3 rounded-xl transition-colors shadow-lg font-medium tracking-wide">Открыть</button>
+                    </div>
+                    <div id="pwd-error-${sourceIndex}" class="text-brand-ruby text-xs md:text-sm mt-3 hidden smooth-theme">Ответ неверный, попробуй еще раз ❤️</div>
+                </div>`;
+            } else {
+                innerHtml += `<div class="text-[10px] md:text-[14px] font-sans font-medium tracking-widest uppercase mb-2 md:mb-3 smooth-theme" style="${badgeStyle}">${block.date}</div>
+                    <h3 class="font-serif text-2xl md:text-4xl text-brand-text mb-2 md:mb-4 smooth-theme ${block.theme==='special-gold'?'text-center':''}">${block.title}</h3>`;
+
+                if (block.calcDate) {
+                    const bDate = new Date(block.calcDate + 'T00:00:00');
+                    const start = new Date('2025-08-27T00:00:00');
+                    const diffDays = Math.floor((bDate - start) / (1000 * 60 * 60 * 24));
+                    if (diffDays >= 0) {
+                        innerHtml += `<div class="text-[9px] md:text-[11px] font-sans text-brand-gold uppercase tracking-[0.2em] font-bold mb-4 md:mb-6 flex items-center gap-2"><i class="fas fa-clock text-brand-ruby/70 text-sm"></i> ${diffDays} дней вместе</div>`;
+                    }
                 }
 
-                let cardClasses = 'glass-card w-full relative overflow-hidden p-6 sm:p-8 md:p-10 ';
-                let badgeStyle = 'color: rgb(var(--color-ruby-rgb));';
-                if (block.theme === 'special-pink') { cardClasses += 'card-theme-pink '; } else if (block.theme === 'special-blue') { cardClasses += 'card-theme-blue '; badgeStyle = 'color: #60a5fa;'; } else if (block.theme === 'special-gold') { cardClasses += 'card-theme-gold '; badgeStyle = 'color: rgb(var(--color-gold-rgb));'; } else if (block.theme === 'purple') { cardClasses += 'card-theme-purple '; badgeStyle = 'color: #c084fc;'; }
+                if (block.desc) innerHtml += `<div class="text-brand-text font-sans font-light leading-relaxed text-sm md:text-lg smooth-theme">${block.desc}</div>`;
 
-                let innerHtml = `<div id="card-inner-${index}" class="transition-opacity duration-500">`;
-
-                if (block.isLocked) {
-                    innerHtml += `<div class="text-center py-4 md:py-6"><i class="fas fa-lock text-3xl md:text-4xl text-brand-gold mb-4 md:mb-6 smooth-theme"></i><h3 class="font-serif text-2xl md:text-4xl text-brand-text mb-3 md:mb-4 smooth-theme">${block.title}</h3><p class="text-brand-light font-sans text-sm md:text-base font-light mb-6 md:mb-8 max-w-md mx-auto smooth-theme">${block.lockedQuestion}</p><div class="flex flex-col sm:flex-row gap-3 w-full max-w-sm mx-auto"><input type="text" id="pwd-input-${index}" class="flex-1 bg-brand-bg/50 border border-brand-gold/30 rounded-xl px-4 py-3 text-brand-text outline-none focus:border-brand-ruby transition-colors font-sans" placeholder="Ваш ответ..."><button onclick="unlockChapter(${index})" class="bg-brand-ruby hover:bg-brand-ruby/80 text-white px-6 py-3 rounded-xl transition-colors shadow-lg font-medium tracking-wide">Открыть</button></div><div id="pwd-error-${index}" class="text-brand-ruby text-xs md:text-sm mt-3 hidden smooth-theme">Ответ неверный, попробуй еще раз ❤️</div></div>`;
-                } else {
-                    innerHtml += `<div class="text-[10px] md:text-[14px] font-sans font-medium tracking-widest uppercase mb-2 md:mb-3 smooth-theme" style="${badgeStyle}">${block.date}</div><h3 class="font-serif text-2xl md:text-4xl text-brand-text mb-2 md:mb-4 smooth-theme ${block.theme==='special-gold'?'text-center':''}">${block.title}</h3>`;
-                    if (block.calcDate) {
-                        const bDate = new Date(block.calcDate + 'T00:00:00'); const start = new Date('2025-08-27T00:00:00'); const diffDays = Math.floor((bDate - start) / (1000 * 60 * 60 * 24));
-                        if (diffDays >= 0) { innerHtml += `<div class="text-[9px] md:text-[11px] font-sans text-brand-gold uppercase tracking-[0.2em] font-bold mb-4 md:mb-6 flex items-center gap-2"><i class="fas fa-clock text-brand-ruby/70 text-sm"></i> ${diffDays} дней вместе</div>`; }
-                    }
-                    if (block.desc) innerHtml += `<div class="text-brand-text font-sans font-light leading-relaxed text-sm md:text-lg smooth-theme">${block.desc}</div>`;
-                    if (heartLocations.includes(index)) {
-                        const posClass = index === 1 ? 'top-4 md:top-6 right-4 md:right-6' : (index === 6 ? 'bottom-4 md:bottom-6 right-4 md:right-6' : 'bottom-4 md:bottom-6 left-4 md:left-6');
-                        innerHtml += `<i class="fas fa-heart hidden-heart ${posClass}" onclick="findHeart(this)"></i>`;
-                    }
-                    if (block.list) { const listItems = block.list.map(li => { if (li.media) { return { ...li.media, subtitle: li.text }; } return null; }).filter(Boolean); innerHtml += renderMediaGrid(listItems, true); }
-                    if (block.media && block.media.length > 0) innerHtml += renderMediaGrid(block.media);
-                    if (block.mediaGrid) innerHtml += renderMediaGrid(block.mediaGrid);
-                    if (block.poem) innerHtml += `<div class="editorial-quote"><p>${block.poem}</p></div>`;
-                    if (block.extraDesc) innerHtml += `<div class="text-brand-text font-sans font-light leading-relaxed text-sm md:text-lg smooth-theme">${block.extraDesc}</div>`;
-                    if (block.extraMedia && block.extraMedia.length > 0) innerHtml += renderMediaGrid(block.extraMedia);
-                    if (block.extraMediaGrid) innerHtml += renderMediaGrid(block.extraMediaGrid);
-                    if (block.poem2) innerHtml += `<div class="editorial-quote"><p>${block.poem2}</p></div>`;
-                    if (block.masonryGallery) {
-                        innerHtml += `<div class="masonry-gallery columns-1 sm:columns-2 lg:columns-3 gap-2 sm:gap-3 md:gap-4 my-6 md:my-8 space-y-2 sm:space-y-3 md:space-y-4">`;
-                        block.masonryGallery.forEach(imgSrc => { 
-                            const placeholder = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'%3E%3C/svg%3E";
-                            innerHtml += `<div class="photo-container break-inside-avoid w-full"><img src="${placeholder}" data-src="${imgSrc}" class="w-full block photo-hover lazy-image" loading="lazy"></div>`; 
-                        });
-                        innerHtml += `</div>`;
-                    }
-                    if (block.finalDesc) innerHtml += `<div class="text-brand-text font-sans font-light leading-relaxed text-sm md:text-lg smooth-theme">${block.finalDesc}</div>`;
-                    if (block.finalMedia && block.finalMedia.length > 0) innerHtml += renderMediaGrid(block.finalMedia);
-                    if (block.finalMediaGrid) innerHtml += renderMediaGrid(block.finalMediaGrid);
-                    if (block.postDesc) innerHtml += `<div class="text-brand-text font-sans font-light leading-relaxed text-sm md:text-lg smooth-theme">${block.postDesc}</div>`;
-                    if (block.postMediaGrid) innerHtml += renderMediaGrid(block.postMediaGrid);
-                    if (block.postPostDesc) innerHtml += `<div class="text-brand-text font-sans font-light leading-relaxed text-sm md:text-lg smooth-theme">${block.postPostDesc}</div>`;
-                    if (block.postPostMediaGrid) innerHtml += renderMediaGrid(block.postPostMediaGrid);
-                    if (block.postPostMedia) innerHtml += renderMediaGrid(block.postPostMedia);
-                }
-                
-                innerHtml += `</div>`;
-                let dColor = block.dominantColor;
-                if (!dColor) {
-                    const textToSearch = ((block.title || '') + ' ' + (block.desc || '')).toLowerCase();
-                    if (block.theme === 'special-pink') dColor = 'rgba(236, 72, 153, 0.15)'; else if (block.theme === 'special-blue') dColor = 'rgba(59, 130, 246, 0.15)'; else if (block.theme === 'special-gold') dColor = 'rgba(234, 179, 8, 0.15)'; else if (block.theme === 'purple') dColor = 'rgba(168, 85, 247, 0.15)'; else if (textToSearch.includes('зим') || textToSearch.includes('снег') || textToSearch.includes('холод')) dColor = 'rgba(14, 165, 233, 0.12)'; else if (textToSearch.includes('солнц') || textToSearch.includes('лет')) dColor = 'rgba(245, 158, 11, 0.12)'; else if (textToSearch.includes('лес') || textToSearch.includes('парк') || textToSearch.includes('весна')) dColor = 'rgba(34, 197, 94, 0.1)'; else dColor = 'rgba(197, 168, 128, 0.08)'; 
+                if (heartLocations.includes(sourceIndex)) {
+                    const posClass = sourceIndex === 1 ? 'top-4 md:top-6 right-4 md:right-6' :
+                        (sourceIndex === 6 ? 'bottom-4 md:bottom-6 right-4 md:right-6' : 'bottom-4 md:bottom-6 left-4 md:left-6');
+                    innerHtml += `<i class="fas fa-heart hidden-heart ${posClass}" onclick="findHeart(this)"></i>`;
                 }
 
-                const article = document.createElement('article');
-                article.className = `timeline-item reveal-node`;
-                article.setAttribute('data-dominant-color', dColor);
-                if (block.season) article.setAttribute('data-season', block.season);
+                if (block.list) {
+                    const listItems = block.list.map(li => li.media ? { ...li.media, subtitle: li.text } : null).filter(Boolean);
+                    innerHtml += renderMediaGrid(listItems, true);
+                }
+                if (block.media && block.media.length > 0) innerHtml += renderMediaGrid(block.media);
+                if (block.mediaGrid) innerHtml += renderMediaGrid(block.mediaGrid);
+                if (block.poem) innerHtml += `<div class="editorial-quote"><p>${block.poem}</p></div>`;
+                if (block.extraDesc) innerHtml += `<div class="text-brand-text font-sans font-light leading-relaxed text-sm md:text-lg smooth-theme">${block.extraDesc}</div>`;
+                if (block.extraMedia && block.extraMedia.length > 0) innerHtml += renderMediaGrid(block.extraMedia);
+                if (block.extraMediaGrid) innerHtml += renderMediaGrid(block.extraMediaGrid);
+                if (block.poem2) innerHtml += `<div class="editorial-quote"><p>${block.poem2}</p></div>`;
 
-                article.innerHTML = `<div class="timeline-line smooth-theme"></div><div class="timeline-dot smooth-theme" style="background-color: ${dColor}"></div><div class="w-full relative z-10 lazy-wrapper" style="min-height: 800px;"><div class="flex justify-center items-center py-20"><i class="fas fa-spinner fa-spin text-brand-ruby/40 text-2xl"></i></div></div>`;
-                article.dataset.htmlContent = `${block.heartbeat ? '<div class="heartbeat-wrapper">' : ''}<div class="${cardClasses}">${innerHtml}</div>${block.heartbeat ? '</div>' : ''}`;
-                timelineContainer.appendChild(article);
+                if (block.masonryGallery) {
+                    innerHtml += `<div class="masonry-gallery columns-1 sm:columns-2 lg:columns-3 gap-2 sm:gap-3 md:gap-4 my-6 md:my-8 space-y-2 sm:space-y-3 md:space-y-4">`;
+                    block.masonryGallery.forEach(imgSrc => {
+                        const placeholder = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'%3E%3C/svg%3E";
+                        innerHtml += `<div class="photo-container break-inside-avoid w-full"><img src="${placeholder}" data-src="${imgSrc}" class="w-full block photo-hover lazy-image" loading="lazy" decoding="async"></div>`;
+                    });
+                    innerHtml += `</div>`;
+                }
+
+                if (block.finalDesc) innerHtml += `<div class="text-brand-text font-sans font-light leading-relaxed text-sm md:text-lg smooth-theme">${block.finalDesc}</div>`;
+                if (block.finalMedia && block.finalMedia.length > 0) innerHtml += renderMediaGrid(block.finalMedia);
+                if (block.finalMediaGrid) innerHtml += renderMediaGrid(block.finalMediaGrid);
+                if (block.postDesc) innerHtml += `<div class="text-brand-text font-sans font-light leading-relaxed text-sm md:text-lg smooth-theme">${block.postDesc}</div>`;
+                if (block.postMediaGrid) innerHtml += renderMediaGrid(block.postMediaGrid);
+                if (block.postPostDesc) innerHtml += `<div class="text-brand-text font-sans font-light leading-relaxed text-sm md:text-lg smooth-theme">${block.postPostDesc}</div>`;
+                if (block.postPostMediaGrid) innerHtml += renderMediaGrid(block.postPostMediaGrid);
+                if (block.postPostMedia) innerHtml += renderMediaGrid(block.postPostMedia);
+            }
+
+            innerHtml += `</div>`;
+
+            let dColor = block.dominantColor;
+            if (!dColor) {
+                const textToSearch = ((block.title || '') + ' ' + (block.desc || '')).toLowerCase();
+                if (block.theme === 'special-pink') dColor = 'rgba(236, 72, 153, 0.15)';
+                else if (block.theme === 'special-blue') dColor = 'rgba(59, 130, 246, 0.15)';
+                else if (block.theme === 'special-gold') dColor = 'rgba(234, 179, 8, 0.15)';
+                else if (block.theme === 'purple') dColor = 'rgba(168, 85, 247, 0.15)';
+                else if (textToSearch.includes('зим') || textToSearch.includes('снег') || textToSearch.includes('холод')) dColor = 'rgba(14, 165, 233, 0.12)';
+                else if (textToSearch.includes('солнц') || textToSearch.includes('лет')) dColor = 'rgba(245, 158, 11, 0.12)';
+                else if (textToSearch.includes('лес') || textToSearch.includes('парк') || textToSearch.includes('весна')) dColor = 'rgba(34, 197, 94, 0.1)';
+                else dColor = 'rgba(197, 168, 128, 0.08)';
+            }
+
+            const article = document.createElement('article');
+            article.className = 'timeline-item reveal-node';
+            article.setAttribute('data-dominant-color', dColor);
+            if (block.season) article.setAttribute('data-season', block.season);
+            article.innerHTML = `<div class="timeline-line smooth-theme"></div>
+                <div class="timeline-dot smooth-theme" style="background-color: ${dColor}"></div>
+                <div class="w-full relative z-10">
+                    <div class="${block.heartbeat ? 'heartbeat-wrapper' : ''}">
+                        <div class="${cardClasses}">${innerHtml}</div>
+                    </div>
+                </div>`;
+            return article;
+        }
+
+        function addChapterNavigation(chapterIndex) {
+            const nav = document.createElement('div');
+            nav.className = 'flex flex-col sm:flex-row items-stretch justify-center gap-3 md:gap-4 pt-6 md:pt-10 pb-10 md:pb-16';
+
+            const prev = chapterIndex > 0
+                ? `<button type="button" onclick="openChapter(${chapterIndex - 1})" class="chapter-nav-btn inline-flex items-center justify-center gap-2 px-6 py-3 border border-brand-gold/30 bg-brand-gold/5 text-brand-text hover:text-brand-ruby hover:border-brand-ruby/40 transition-all" style="border-radius: var(--radius-btn);"><i class="fas fa-arrow-left"></i> Предыдущая</button>`
+                : `<button type="button" onclick="returnToHome()" class="chapter-nav-btn inline-flex items-center justify-center gap-2 px-6 py-3 border border-brand-gold/30 bg-brand-gold/5 text-brand-text hover:text-brand-ruby hover:border-brand-ruby/40 transition-all" style="border-radius: var(--radius-btn);"><i class="fas fa-house"></i> На главную</button>`;
+
+            const next = chapterIndex < chapterGroups.length - 1
+                ? `<button type="button" onclick="openChapter(${chapterIndex + 1})" class="chapter-nav-btn inline-flex items-center justify-center gap-2 px-6 py-3 bg-brand-ruby text-white hover:bg-brand-ruby/80 transition-all shadow-lg shadow-brand-ruby/20" style="border-radius: var(--radius-btn);">Следующая глава <i class="fas fa-arrow-right"></i></button>`
+                : `<button type="button" onclick="returnToHome()" class="chapter-nav-btn inline-flex items-center justify-center gap-2 px-6 py-3 bg-brand-ruby text-white hover:bg-brand-ruby/80 transition-all shadow-lg shadow-brand-ruby/20" style="border-radius: var(--radius-btn);"><i class="fas fa-house"></i> Вернуться на главную</button>`;
+
+            nav.innerHTML = prev + next;
+            return nav;
+        }
+
+        function updateChapterTocState() {
+            document.querySelectorAll('#toc-links [data-chapter-index]').forEach(el => {
+                el.classList.toggle('ring-1', Number(el.dataset.chapterIndex) === currentChapterIndex);
+                el.classList.toggle('ring-brand-ruby/40', Number(el.dataset.chapterIndex) === currentChapterIndex);
             });
         }
 
-        const domObserver = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting && entry.target.dataset.htmlContent) {
-                    const el = entry.target; const wrapper = el.querySelector('.lazy-wrapper');
-                    if (wrapper) { wrapper.innerHTML = el.dataset.htmlContent; wrapper.classList.remove('lazy-wrapper'); delete el.dataset.htmlContent; initImageFrames(el); initVideoPlayers(); }
+        window.openChapter = function(chapterIndex) {
+            const index = Number(chapterIndex);
+            if (!Number.isInteger(index) || !chapterGroups[index]) return;
+
+            const group = chapterGroups[index];
+            currentChapterIndex = index;
+            cleanupTimelineResources();
+
+            const timeline = document.getElementById('timeline');
+            const fragment = document.createDocumentFragment();
+
+            const parts = getChapterTitleParts(group);
+            const heading = document.createElement('div');
+            heading.id = group.id;
+            heading.className = 'w-full text-center py-12 md:py-16 reveal-node relative mt-2 md:mt-6 mb-2 md:mb-6 smooth-theme';
+            heading.innerHTML = `<div class="text-[10px] md:text-xs font-sans text-brand-light uppercase tracking-[0.25em] mb-2">${parts.eyebrow}</div>
+                <h2 class="font-serif text-3xl sm:text-4xl md:text-6xl text-brand-ruby mb-3 md:mb-4 relative z-10 smooth-theme">${parts.name}</h2>
+                <p class="text-brand-light font-sans text-sm md:text-base font-light italic max-w-xl mx-auto px-4 smooth-theme">${group.desc}</p>`;
+            fragment.appendChild(heading);
+
+            group.blocks.forEach(({ block, sourceIndex }) => {
+                const article = buildChapterBlock(block, sourceIndex);
+                fragment.appendChild(article);
+            });
+
+            fragment.appendChild(addChapterNavigation(index));
+            timeline.appendChild(fragment);
+
+            document.documentElement.style.setProperty('--ambient-glow', group.blocks[0]?.block?.dominantColor || 'rgba(197, 168, 128, 0.08)');
+            if (group.blocks[0]?.block?.season) document.getElementById('particles').className = group.blocks[0].block.season;
+
+            // Инициализируем только ресурсы новой главы.
+            initImageFrames(timeline);
+            initVideoPlayers();
+
+            // Включаем reveal для новых узлов.
+            timeline.querySelectorAll('.reveal-node').forEach(node => {
+                if (typeof revealObserver !== 'undefined') revealObserver.observe(node);
+            });
+            timeline.querySelectorAll('.timeline-dot').forEach(dot => {
+                if (typeof dotObserver !== 'undefined') dotObserver.observe(dot);
+            });
+
+            updateChapterTocState();
+
+            const launcher = document.getElementById('chapter-launcher');
+            if (launcher) launcher.classList.add('hidden');
+
+            requestAnimationFrame(() => {
+                const top = timeline.getBoundingClientRect().top + window.pageYOffset - (window.innerWidth < 768 ? 20 : 40);
+                window.scrollTo({ top, behavior: 'auto' });
+            });
+        };
+
+        window.returnToHome = function() {
+            cleanupTimelineResources();
+            currentChapterIndex = -1;
+            const launcher = document.getElementById('chapter-launcher');
+            if (launcher) launcher.classList.remove('hidden');
+            updateChapterTocState();
+
+            requestAnimationFrame(() => {
+                const meetings = document.getElementById('meetings');
+                if (meetings) {
+                    const top = meetings.getBoundingClientRect().top + window.pageYOffset - (window.innerWidth < 768 ? 10 : 20);
+                    window.scrollTo({ top, behavior: 'auto' });
+                } else {
+                    window.scrollTo({ top: 0, behavior: 'auto' });
                 }
             });
-        }, { rootMargin: "600px 0px", threshold: 0 });
-        document.querySelectorAll('.timeline-item').forEach(el => domObserver.observe(el));
+        };
+
+        window.findHeart = function(el) {
+            if(el.classList.contains('found')) return;
+            el.classList.add('found'); heartsFound++;
+            if(heartsFound >= totalHearts) {
+                setTimeout(() => {
+                    const qm = document.getElementById('quest-modal');
+                    qm.classList.remove('opacity-0', 'pointer-events-none');
+                    qm.classList.add('active');
+                    updateBodyScrollLock();
+                }, 500);
+            }
+        };
+
+        window.closeQuestModal = function() {
+            const qm = document.getElementById('quest-modal');
+            qm.classList.remove('active');
+            qm.classList.add('opacity-0', 'pointer-events-none');
+            updateBodyScrollLock();
+        };
+
+        // Оглавление строится из всех глав, но само содержимое глав в DOM не хранится.
+        if (tocLinksContainer) {
+            tocLinksContainer.innerHTML = `
+                <a href="#special-dates" class="${linkClass}" onclick="handleTocHomeClick(event, 'special-dates')">
+                    <div class="text-[10px] font-sans text-brand-light uppercase tracking-widest mb-1 md:mb-2 group-hover:text-brand-ruby smooth-theme">Созвездие</div>
+                    <div class="font-serif text-lg md:text-xl text-brand-text group-hover:text-brand-ruby smooth-theme">Наших Дат</div>
+                </a>
+                <a href="#meetings" class="${linkClass}" onclick="handleTocHomeClick(event, 'meetings')">
+                    <div class="text-[10px] font-sans text-brand-light uppercase tracking-widest mb-1 md:mb-2 group-hover:text-brand-ruby smooth-theme">Журнал</div>
+                    <div class="font-serif text-lg md:text-xl text-brand-text group-hover:text-brand-ruby smooth-theme">Наши Встречи</div>
+                </a>
+            `;
+
+            chapterGroups.forEach((chapter, i) => {
+                const parts = getChapterTitleParts(chapter);
+                tocLinksContainer.insertAdjacentHTML('beforeend', `
+                    <button type="button" data-chapter-index="${i}" class="${linkClass} text-left"
+                        onclick="handleTocChapterClick(event, ${i})">
+                        <div class="text-[10px] font-sans text-brand-light uppercase tracking-widest mb-1 md:mb-2 group-hover:text-brand-ruby smooth-theme">${parts.eyebrow}</div>
+                        <div class="font-serif text-lg md:text-xl text-brand-text group-hover:text-brand-ruby transition-colors leading-tight smooth-theme">${parts.name}</div>
+                    </button>
+                `);
+            });
+        }
+
+        window.handleTocHomeClick = function(e, targetId) {
+            e.preventDefault();
+            window.closeToc();
+            if (currentChapterIndex !== -1) {
+                cleanupTimelineResources();
+                currentChapterIndex = -1;
+                const launcher = document.getElementById('chapter-launcher');
+                if (launcher) launcher.classList.remove('hidden');
+            }
+            setTimeout(() => {
+                const target = document.getElementById(targetId);
+                if (!target) return;
+                const offset = window.innerWidth < 768 ? 60 : 100;
+                window.scrollTo({ top: target.getBoundingClientRect().top + window.pageYOffset - offset, behavior: 'auto' });
+            }, 80);
+        };
+
+        window.handleTocChapterClick = function(e, chapterIndex) {
+            e.preventDefault();
+            window.closeToc();
+            setTimeout(() => window.openChapter(chapterIndex), 120);
+        };
+
+        const startChapterBtn = document.getElementById('start-chapter-btn');
+        if (startChapterBtn) startChapterBtn.addEventListener('click', () => window.openChapter(0));
 
         const colorObserver = new IntersectionObserver((entries) => { entries.forEach(entry => { if (entry.isIntersecting) { const color = entry.target.getAttribute('data-dominant-color'); if (color) { document.documentElement.style.setProperty('--ambient-glow', color); } const season = entry.target.getAttribute('data-season'); if (season) { document.getElementById('particles').className = season; } } }); }, { rootMargin: "-30% 0px -30% 0px" });
         document.querySelectorAll('.timeline-item').forEach(el => colorObserver.observe(el));
@@ -1669,7 +1927,7 @@
                             if (window.innerWidth < 768 && video.src && video.src !== window.location.href) { video.removeAttribute('src'); video.load(); video.preload = 'none';}
                         }
                     });
-                }, { threshold: 0, rootMargin: '300px 0px' });
+                }, { threshold: 0, rootMargin: '120px 0px' });
                 vObs.observe(wrapper);
                 
                 if (video.readyState >= 1) onVideoReady(); else video.addEventListener('loadedmetadata', onVideoReady);
@@ -1801,19 +2059,11 @@
         
         window.addEventListener('scroll', onScroll, { passive: true });
 
-        window.addEventListener('DOMContentLoaded', () => { 
-            loadSettings(); 
-            const wh = window.innerHeight;
-            document.querySelectorAll('.timeline-item').forEach(el => {
-                if (!el.dataset.htmlContent) return;
-                const rect = el.getBoundingClientRect();
-                if (rect.top < wh * 4 && rect.bottom > -wh * 4) {
-                    const wrapper = el.querySelector('.lazy-wrapper');
-                    if (wrapper) { wrapper.innerHTML = el.dataset.htmlContent; wrapper.classList.remove('lazy-wrapper'); }
-                    delete el.dataset.htmlContent;
-                }
-            });
-            initImageFrames(); initVideoPlayers();
+        window.addEventListener('DOMContentLoaded', () => {
+            loadSettings();
+            // Важное правило: после обновления страницы currentChapterIndex = -1,
+            // поэтому пользователь всегда попадает на главную страницу с таймером,
+            // датами и встречами. Ни одна глава не рендерится заранее.
         });
     </script>
 </body>
