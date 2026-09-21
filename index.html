@@ -4,6 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Даня + Лера | История Нашей Бесконечности</title>
+    <!-- 
+      GitHub Pages / локальный запуск:
+      1. Положите index.html в корень репозитория
+      2. Все медиа (фото/видео) — рядом или в подпапках с теми же именами, что в коде
+      3. Settings → Pages → Deploy from branch (main / root)
+      4. Firebase опционален: без него встречи сохраняются только локально в сессии
+    -->
+
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -90,7 +98,7 @@
         ::-webkit-scrollbar-thumb:hover { background: rgb(var(--color-ruby-rgb)); }
 
         #particles { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; transition: opacity 0.5s; transform: translate3d(0,0,0); -webkit-transform: translate3d(0,0,0); contain: strict; }
-        .particle { position: absolute; border-radius: 50%; opacity: 0.3; transition: background-color var(--anim-duration) cubic-bezier(0.4, 0, 0.2, 1); will-change: transform; }
+        .particle { position: absolute; border-radius: 50%; opacity: 0.25; transition: background-color var(--anim-duration) cubic-bezier(0.4, 0, 0.2, 1); }
         .particle { background-color: rgb(var(--color-gold-rgb)); animation: float-up linear infinite; }
         #particles.summer .particle { background-color: rgb(var(--color-gold-rgb)); animation-name: float-up; }
         #particles.autumn .particle { background-color: rgb(var(--color-gold-rgb)); animation-name: float-diagonal; }
@@ -156,7 +164,7 @@
         body.circle-playing #circle-backdrop { opacity: 1; pointer-events: auto; }
 
         #preloader { position: fixed; inset: 0; background: var(--bg-color); z-index: 100000; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: opacity 0.5s ease-in-out; transform: translate3d(0,0,0); -webkit-transform: translate3d(0,0,0); }
-        .preloader-text { font-family: var(--font-serif), serif; font-size: 3rem; color: rgb(var(--color-ruby-rgb)); animation: pulse-soft 2s infinite alternate; }
+        .preloader-text { font-family: var(--font-serif), serif; font-size: 2.75rem; letter-spacing: 0.04em; color: rgb(var(--color-ruby-rgb)); animation: pulse-soft 2.4s ease-in-out infinite alternate; text-shadow: 0 0 40px rgb(var(--color-ruby-rgb) / 0.35); }
 
         .glass-card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: var(--radius-card); box-shadow: 0 10px 40px var(--card-shadow), inset 0 0 0 1px rgba(255, 255, 255, 0.05); transition: border-radius 0.6s ease, transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1), background-color var(--anim-duration), border-color var(--anim-duration), padding 0.5s ease; backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); transform: translate3d(0,0,0); -webkit-transform: translate3d(0,0,0); will-change: transform, box-shadow; backface-visibility: hidden; }
         @media (hover: hover) { .glass-card:hover { box-shadow: 0 16px 42px var(--card-hover-shadow); transform: translate3d(0,-3px,0); -webkit-transform: translate3d(0,-3px,0); } }
@@ -180,6 +188,7 @@
         .editorial-quote p { font-family: var(--font-serif), serif; font-size: 1.15rem; font-style: italic; color: var(--text-light); line-height: 1.8; margin-bottom: 0.5rem; transition: color var(--anim-duration); }
         @media (min-width: 768px) { .editorial-quote { padding: 2.5rem 2rem; } .editorial-quote p { font-size: 1.25rem; } }
 
+        @keyframes pulse-soft { 0% { opacity: 0.7; transform: scale(1); } 100% { opacity: 1; transform: scale(1.03); } }
         @keyframes pulse-circle { 
             0% { box-shadow: 0 0 0 0 rgb(var(--color-ruby-rgb) / 0.5); } 
             70% { box-shadow: 0 0 0 15px rgb(var(--color-ruby-rgb) / 0); } 
@@ -355,6 +364,27 @@
         .chapter-nav-btn { min-height: 48px; font-family: var(--font-sans), sans-serif; font-size: 0.85rem; letter-spacing: 0.02em; }
         #timeline:empty { min-height: 0; padding-top: 0; padding-bottom: 0; }
         .settings-section-title { font-family: var(--font-sans), sans-serif; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-light); margin-bottom: 1rem; font-weight: 600; }
+    
+        /* Premium refinements */
+        .glass-card {
+            box-shadow: 0 12px 48px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.06);
+        }
+        @media (hover: hover) {
+            .glass-card:hover {
+                box-shadow: 0 20px 50px rgb(var(--color-ruby-rgb) / 0.18), 0 8px 24px rgba(0,0,0,0.5);
+            }
+        }
+        .panel-btn:focus-visible, .chapter-nav-btn:focus-visible, button:focus-visible {
+            outline: 2px solid rgb(var(--color-ruby-rgb) / 0.6);
+            outline-offset: 3px;
+        }
+        #timer-container {
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(212,184,143,0.25);
+        }
+        .media-player.playing {
+            box-shadow: 0 40px 80px rgba(0,0,0,0.85), 0 0 60px rgb(var(--color-ruby-rgb) / 0.35);
+        }
+
     </style>
 </head>
 <body class="selection:bg-brand-ruby selection:text-white relative">
@@ -733,7 +763,7 @@
             const container = document.getElementById('particles');
             if(!container) return;
             container.innerHTML = '';
-            for(let i = 0; i < 35; i++) {
+            for(let i = 0; i < 18; i++) {
                 const p = document.createElement('div');
                 p.className = 'particle';
                 p.style.left = Math.random() * 100 + 'vw';
@@ -1806,6 +1836,14 @@
                 }, 500);
             }
         };
+        window.unlockChapter = function(idx) {
+            const input = document.getElementById('pwd-input-' + idx);
+            const err = document.getElementById('pwd-error-' + idx);
+            if (!input) return;
+            // Placeholder: no locked chapters currently
+            if (err) err.classList.remove('hidden');
+        };
+
 
         window.closeQuestModal = function() {
             const qm = document.getElementById('quest-modal');
@@ -1874,11 +1912,6 @@
         const revealObserver = new IntersectionObserver((entries) => { entries.forEach(entry => { if (entry.isIntersecting) { entry.target.classList.add('active'); } }); }, { threshold: 0.1, rootMargin: "0px 0px -50px 0px" });
         document.querySelectorAll('.reveal-node').forEach(node => { revealObserver.observe(node); });
 
-        window.findHeart = function(el) {
-            if(el.classList.contains('found')) return;
-            el.classList.add('found'); heartsFound++;
-            if(heartsFound >= totalHearts) { setTimeout(() => { const qm = document.getElementById('quest-modal'); qm.classList.remove('opacity-0', 'pointer-events-none'); qm.classList.add('active'); updateBodyScrollLock(); }, 500); }
-        };
         window.closeQuestModal = function() { const qm = document.getElementById('quest-modal'); qm.classList.remove('active'); qm.classList.add('opacity-0', 'pointer-events-none'); updateBodyScrollLock(); };
 
         const lightbox = document.getElementById('lightbox'); const lightboxImg = document.getElementById('lightbox-img');
@@ -2018,6 +2051,15 @@
             const danyaAgeEl = document.getElementById('danya-age'); if (danyaAgeEl) danyaAgeEl.innerText = `Возраст: ${calculateAge('2007-06-17')}`;
             const leraAgeEl = document.getElementById('lera-age'); if (leraAgeEl) leraAgeEl.innerText = `Возраст: ${calculateAge('2011-07-15')}`;
         }
+        
+        document.addEventListener('visibilitychange', () => {
+            const p = document.getElementById('particles');
+            if (p) p.style.animationPlayState = document.hidden ? 'paused' : 'running';
+            p && p.querySelectorAll('.particle').forEach(el => {
+                el.style.animationPlayState = document.hidden ? 'paused' : 'running';
+            });
+        });
+
         setInterval(updateTimers, 1000); updateTimers();
 
         let isScrolling = false;
